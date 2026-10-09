@@ -76,7 +76,7 @@ export function flushWrites(): void;                      // commits pending wri
 export function isPlausibleWirePath(value: unknown): value is string;    // string, no NUL, <= 4096, not absolute, no ".." segment
 ```
 
-T023's writers swallow every storage failure, so this ticket never needs its own `try/catch` around storage, and the app works with storage disabled. T023 also provides `client/test/storageMock.ts` exporting `installMockStorage(options?)`, which returns `{ store, getItem, setItem, removeItem, dispose }`, and its `client/test/setup.ts` resets the storage module's internal state after each test.
+T023's writers swallow every storage failure, so this ticket never needs its own `try/catch` around storage, and the app works with storage disabled. T023 also provides `client/test/helpers/storageMock.ts` exporting `installMockStorage(options?)`, which returns `{ store, getItem, setItem, removeItem, dispose }`, and its `client/test/setup.ts` resets the storage module's internal state after each test.
 
 Wire paths are POSIX, forward-slash, relative to the jail root, with `""` meaning the root (the user's home folder).
 

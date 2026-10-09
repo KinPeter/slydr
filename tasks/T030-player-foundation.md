@@ -1047,7 +1047,7 @@ belongs to T031.
 
 Per specification §12.3: "player keyboard handling and timer behaviour with fake timers".
 Client tests run in the Vitest `jsdom` environment with React Testing Library. Every test
-lives under `client/test/` (the only place Vitest looks), mirrors `src/`, and imports
+lives under `client/test/` (Vitest only discovers `client/test/**/*.test.{ts,tsx}`), mirrors `src/`, and imports
 `describe`, `it`, `expect`, `vi` from `'vitest'` (globals are off). Reuse the T021
 `client/test/helpers/matchMedia.ts` helper if a test needs `matchMedia`; do not add another.
 

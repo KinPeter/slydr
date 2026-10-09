@@ -187,18 +187,18 @@ Per specification §12.3 and §12.6. jsdom has no layout engine: tests assert on
 
 ### 6.2 CSS-source assertions (one small file per screen under `client/test/screens/…`)
 
-- `Explorer/responsive.css.test.ts` — header grid is one column below 768 px and two areas from 768 px; the flexible track is `minmax(0, 1fr)`; `.size` is hidden in the `479.98px` block; grid bands equal 104/132/160 px; `.body` has `scrollbar-gutter: stable`; rows, tiles have `touch-action: manipulation`.
-- `Config/responsive.css.test.ts` — `.column` is `width: 100%`, `max-width: 35rem` only inside `min-width: 768px`; padding uses the safe-area `max()`.
-- `Player/pill.css.test.ts` — inside `max-width: 767.98px`: button size 48 px (via token or literal), `.counter { display: none }`, `gap: var(--space-1)`; the `pointer: coarse` block appears **before** the `767.98px` block; no `border-radius: 999px` literal (uses `--radius-pill`).
+- `client/test/screens/Explorer/responsive.css.test.ts` — header grid is one column below 768 px and two areas from 768 px; the flexible track is `minmax(0, 1fr)`; `.size` is hidden in the `479.98px` block; grid bands equal 104/132/160 px; `.body` has `scrollbar-gutter: stable`; rows, tiles have `touch-action: manipulation`.
+- `client/test/screens/Config/responsive.css.test.ts` — `.column` is `width: 100%`, `max-width: 35rem` only inside `min-width: 768px`; padding uses the safe-area `max()`.
+- `client/test/screens/Player/pill.css.test.ts` — inside `max-width: 767.98px`: button size 48 px (via token or literal), `.counter { display: none }`, `gap: var(--space-1)`; the `pointer: coarse` block appears **before** the `767.98px` block; no `border-radius: 999px` literal (uses `--radius-pill`).
 
 ### 6.3 Component tests
 
-Paths below are relative to `client/test/screens/` (mirroring `src/screens/`), except the helper test, which is `client/test/helpers/matchMedia.test.ts`.
+Paths below are explicit full paths under `client/test/` (mirroring `src/screens/`).
 
-- `Explorer/useBreadcrumbCap.test.tsx` — with `installViewport({ width: 767 })` returns `1`; at 768 returns `undefined`; fires on `setViewport({ width: 800 })`; returns `undefined` when `matchMedia` is missing; removes its listener on unmount (`listenerCount` is 0).
-- `Explorer/ExplorerHeader.responsive.test.tsx` — at width 320 and path `a/b/c/d` the header shows the button "Show hidden folders" and no "Home" button in the trail; opening the menu lists `Home`, `a`, `b`, `c` in order; at 768 the standard layout renders ("Home" button visible).
-- `Player/touchReveal.test.tsx` — a `pointerdown` with `pointerType: 'touch'` on the player root reveals the overlay and leaves `data-status` and the counter unchanged.
-- `helpers/matchMedia.test.ts` — `installViewport` answers min/max-width, hover, pointer and reduced-motion queries; `setViewport` fires `change` only for flipped queries.
+- `client/test/screens/Explorer/useBreadcrumbCap.test.tsx` — with `installViewport({ width: 767 })` returns `1`; at 768 returns `undefined`; fires on `setViewport({ width: 800 })`; returns `undefined` when `matchMedia` is missing; removes its listener on unmount (`listenerCount` is 0).
+- `client/test/screens/Explorer/ExplorerHeader.responsive.test.tsx` — at width 320 and path `a/b/c/d` the header shows the button "Show hidden folders" and no "Home" button in the trail; opening the menu lists `Home`, `a`, `b`, `c` in order; at 768 the standard layout renders ("Home" button visible).
+- `client/test/screens/Player/touchReveal.test.tsx` — a `pointerdown` with `pointerType: 'touch'` on the player root reveals the overlay and leaves `data-status` and the counter unchanged.
+- `client/test/helpers/matchMedia.test.ts` — `installViewport` answers min/max-width, hover, pointer and reduced-motion queries; `setViewport` fires `change` only for flipped queries.
 
 ### 6.4 Manual checklist (record in the pull request)
 

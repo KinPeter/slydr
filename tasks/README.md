@@ -93,7 +93,11 @@ write, Definition of done, Notes and gotchas.
 - Phase 3 and Phase 4 are independent after T004–T007 and can run in parallel.
 - **Tooling tests.** Code outside the three workspaces (`scripts/`) is tested with Vitest in a fourth root project, `tooling` (node environment), created by T037 with `include: ['scripts/**/*.test.{ts,mjs}']`. `npm test` is the single entry point; no ticket uses `node:test` or adds a separate test script. Root `typecheck` additions are appended to T002's chain, never restated.
 - Tests live in `<workspace>/test/`, mirroring `src/` (never next to the source): Vitest
-  only discovers `test/**/*.test.{ts,tsx}` (T001 §4.1, T002 §4.7). Reference snippets in
+  only discovers `shared/test/**/*.test.ts` (node; `.ts` only),
+  `server/test/**/*.test.ts` (node; `.ts` only), `client/test/**/*.test.{ts,tsx}` (jsdom),
+  and `scripts/**/*.test.{ts,mjs}` (tooling; plain `.js` NOT discovered) (T001 §4.1, T002 §4.7).
+  Never in `src/`, never `__tests__/`, never `tests/` plural, never `*.spec.*`, never root
+  `test/`; no globals. Reference snippets in
   tickets must compile under the repo's strict flags (`noUncheckedIndexedAccess`,
   `noImplicitOverride`, `verbatimModuleSyntax`).
 - T041 creates `README.md`. No earlier ticket creates it: where an earlier ticket's definition

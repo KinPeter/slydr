@@ -369,7 +369,7 @@ level:
 | Gap | Where it is tolerated | Tighten when |
 |---|---|---|
 | `client` has no `build` script until the client-shell tickets (epic E9) add Vite | root `build` uses `npm run build -w @slydr/client --if-present` (T001) | The ticket that adds the client's `build` script removes `--if-present` from that one command in root `package.json`, so a missing client build becomes a CI failure. |
-| Few real tests exist: `npm test` runs only the toolchain smoke tests from T002 | Not tolerated; the suite simply is small | Nothing to tighten; each later ticket adds tests and CI picks them up automatically because Vitest's `projects` globs include `test/**`. |
+| Few real tests exist: `npm test` runs only the toolchain smoke tests from T002 | Not tolerated; the suite simply is small | Nothing to tighten; each later ticket adds tests and CI picks them up automatically because Vitest's `projects` globs include `test/**/*.test.ts` (`test/**/*.test.{ts,tsx}` for `client`). |
 | Browser-based testing | The workflow has **no** browser-testing step at all. No step installs browsers and no additional test job exists. |
 | `start`, `dev` | Not run by CI | Out of CI scope. |
 

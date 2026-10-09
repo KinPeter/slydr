@@ -206,7 +206,7 @@ client/src/screens/Explorer/
 
 Delete the T024 placeholder `client/src/screens/Explorer/index.tsx` in the same change, so module resolution is unambiguous (`index.ts` replaces it). `client/src/App.tsx` already imports the screen from its directory (T024), so it needs no edit.
 
-Tests live under `client/test/screens/Explorer/` (mirroring `src/`; Vitest only discovers `client/test/**`), shared helpers under `client/test/helpers/`. Tests import `describe`, `it`, `expect`, `vi` from `'vitest'`.
+Tests live under `client/test/screens/Explorer/` (mirroring `src/`; Vitest only discovers `client/test/**/*.test.{ts,tsx}`), shared helpers under `client/test/helpers/`. Tests import `describe`, `it`, `expect`, `vi` from `'vitest'`.
 
 Put every user-visible string in `copy.ts` as a named export. The tests assert on these strings, and T027/T028/T029 will not need to touch them.
 

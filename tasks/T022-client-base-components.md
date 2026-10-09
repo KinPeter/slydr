@@ -90,7 +90,7 @@ client/src/components/
 
 client/test/components/
   Button.test.tsx               # tests mirror src/ and live under client/test/ only
-  ...                           # one <Component>.test.tsx per component, plus barrel.test.ts and Gallery.test.tsx
+  ...                           # one <Component>.test.tsx per component, plus client/test/components/barrel.test.ts and client/test/components/Gallery.test.tsx
 ```
 
 `ThemeToggle` (T021) lives in `client/src/components/ThemeToggle/` but is **not** part of this barrel.
@@ -681,7 +681,7 @@ if (import.meta.env.DEV && location.hash === '#/gallery') {
 
 ## 6. Tests to write
 
-Per specification §12.3 (component tests with React Testing Library) and NFR-6. Use `@testing-library/user-event` (`userEvent.setup()`) for keyboard and pointer interaction. Tests live under `client/test/components/` (one `<Component>.test.tsx` per component, mirroring `src/components/`; Vitest only discovers `client/test/**`) and import `describe`, `it`, `expect`, `vi` from `'vitest'`. All tests render with `render(...)` from `@testing-library/react`; none depends on a particular theme. Component imports use the barrel or the component folder (`../../src/components/Button`).
+Per specification §12.3 (component tests with React Testing Library) and NFR-6. Use `@testing-library/user-event` (`userEvent.setup()`) for keyboard and pointer interaction. Tests live under `client/test/components/` (one `<Component>.test.tsx` per component, mirroring `src/components/`; Vitest only discovers `client/test/**/*.test.{ts,tsx}`) and import `describe`, `it`, `expect`, `vi` from `'vitest'`. All tests render with `render(...)` from `@testing-library/react`; none depends on a particular theme. Component imports use the barrel or the component folder (`../../src/components/Button`).
 
 ### `client/test/components/Button.test.tsx`
 

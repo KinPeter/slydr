@@ -293,7 +293,7 @@ This module runs identically on win32, darwin, and linux because it never touche
 
 Specification §12.1 explicitly calls for Vitest coverage of the shared package's "wire-path helpers." All of it lives in one file.
 
-**`shared/test/paths.test.ts`** (import the subject from `'../src/index.js'`; Vitest only discovers `shared/test/**`)
+**`shared/test/paths.test.ts`** (import the subject from `'../src/index.js'`; Vitest only discovers `shared/test/**/*.test.ts`)
 
 - `describe('normalizeWirePath')`
   - `it('returns the empty string unchanged for the jail root')`

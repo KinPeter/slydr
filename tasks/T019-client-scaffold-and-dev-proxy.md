@@ -324,7 +324,7 @@ This ticket adds the server workspace's `dev` script itself, in `server/package.
 
 `client/vitest.config.ts` and `client/test/setup.ts` **already exist from T002**. Do not recreate or overwrite them. Make only these changes:
 
-- Leave `globals` off (tests import `describe`/`it`/`expect`/`vi` from `'vitest'`) and keep the `include` pattern `test/**/*.test.{ts,tsx}`.
+- Leave `globals` off (tests import `describe`/`it`/`expect`/`vi` from `'vitest'`) and keep the `include` pattern `client/test/**/*.test.{ts,tsx}`.
 - Replace T002's `css: { modules: { classNameStrategy: 'non-scoped' } }` with `css: { include: /.+/, modules: { classNameStrategy: 'non-scoped' } }` so that CSS files are actually processed. Later tickets use CSS Modules; without `include`, Vitest stubs CSS and the imported `styles` object is empty, which makes every `className` assertion fail.
 - Optionally switch to `mergeConfig(viteConfig, ...)` so the test run shares the resolve and plugin settings of `client/vite.config.ts`, as long as the T002 settings above are kept.
 - `client/test/setup.ts` stays as T002 wrote it; do not replace it with a one-line import, or the RTL cleanup is lost and rendered trees leak between tests.
@@ -401,7 +401,7 @@ Confirm `npm run lint` is clean on the new files (for example the `<main>`/`<h1>
 
 ## 6. Tests to write
 
-Per specification §12.3 (component tests with React Testing Library in the `jsdom` environment). All tests live under `client/test/` (Vitest only discovers `test/**/*.test.{ts,tsx}`) and import `describe`, `it`, `expect`, `vi` from `'vitest'`.
+Per specification §12.3 (component tests with React Testing Library in the `jsdom` environment). All tests live under `client/test/` (Vitest only discovers `client/test/**/*.test.{ts,tsx}`) and import `describe`, `it`, `expect`, `vi` from `'vitest'`.
 
 ### `client/test/App.test.tsx`
 
