@@ -11,7 +11,8 @@ import { Router as createRouter } from 'express';
 import path from 'node:path';
 import type { Logger } from '../logger.js';
 import { listDirectory } from '../services/listing.js';
-import type { RootResponse, ListResponse } from '@slydr/shared';
+import { scanImages } from '../services/scan.js';
+import type { RootResponse, ListResponse, ImagesResponse } from '@slydr/shared';
 import { normalizeWirePath, wireParent, wireBasename } from '@slydr/shared';
 import { getJailRoot, resolveSafe, assertDirectory } from '../security/jail.js';
 import { ApiError } from '../middleware/errorEnvelope.js';
@@ -58,15 +59,18 @@ export interface CreateFsRouterDeps {
   logger: Logger;
   /** Optional test seam: inject a stub listDirectory. Defaults to the real service. */
   listDirectory?: typeof listDirectory;
+  /** Optional test seam: inject a stub scanImages. Defaults to the real service. */
+  scanImages?: typeof scanImages;
 }
 
 /**
- * Creates the fs router with GET /root and GET /list handlers.
+ * Creates the fs router with GET /root, GET /list, and GET /images handlers.
  * The logger is injected and used for structured logging.
  */
 export function createFsRouter(deps: CreateFsRouterDeps): Router {
   const router = createRouter();
   const listDirectoryFn = deps.listDirectory ?? listDirectory;
+  const scanImagesFn = deps.scanImages ?? scanImages;
 
   /**
    * GET /root — Returns the jail root description.
@@ -151,6 +155,61 @@ export function createFsRouter(deps: CreateFsRouterDeps): Router {
       showHidden,
       entries: listing.entries.length,
       truncated: listing.truncated,
+      ms,
+    });
+
+    res.set('Cache-Control', 'no-store').json(response);
+  });
+
+  /**
+   * GET /images — Returns the complete, ordered image playlist for a folder.
+   * Specification §5.4.
+   */
+  router.get('/images', async (req: Request, res: Response): Promise<void> => {
+    const startMs = Date.now();
+
+    // Step 1: Validate query parameters (all query params, in order)
+    // Decision: parameters are validated before any file-system access (spec §4.2 lines 260–264).
+    // A request with a bad recursive and a non-existent path returns 400 INVALID_PARAM, not 404.
+    // This keeps the cheap check ahead of the expensive one.
+    const rawPath = readStringParam(req.query.path, 'path', '');
+    const recursive = readBooleanParam(req.query.recursive, 'recursive');
+    const showHidden = readBooleanParam(req.query.showHidden, 'showHidden');
+
+    // Step 2: Resolve the path safely (may throw ApiError)
+    const absPath = await resolveSafe(rawPath);
+
+    // Step 3: Verify it's a directory (may throw ApiError)
+    await assertDirectory(absPath);
+
+    // Step 4: Normalise the wire path (lexical, not resolved)
+    const wirePath = normalizeWirePath(rawPath);
+
+    // Step 5: Call scanImages with the injected service
+    const { items, truncated } = await scanImagesFn({
+      absPath,
+      wirePath,
+      recursive,
+      showHidden,
+      logger: deps.logger,
+    });
+
+    // Step 6: Assemble and send the response
+    const response: ImagesResponse = {
+      path: wirePath,
+      recursive,
+      count: items.length,
+      truncated,
+      items,
+    };
+
+    // Log the event (includes absolute paths; logs may leak them)
+    const ms = Date.now() - startMs;
+    deps.logger.debug('fs.images', {
+      path: wirePath,
+      recursive,
+      count: items.length,
+      truncated,
       ms,
     });
 
