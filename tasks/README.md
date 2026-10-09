@@ -1,6 +1,6 @@
 # Slydr — Development Tickets
 
-Source of truth: [`../specification.md`](../specification.md) (v1.0, 2026-10-08).
+Source of truth: [`../docs/specification.md`](../docs/specification.md) (v1.0, 2026-10-08).
 
 Tickets are dependency-ordered and numbered from a ground-up start: `T001` assumes an
 empty repository. Each ticket is self-contained — an implementation agent receiving a

@@ -1,6 +1,6 @@
 # T000 — <Short imperative title>
 
-**Epic:** <E# from specification.md §15>
+**Epic:** <E# from docs/specification.md §15>
 **Spec sections:** <§x.y, FR-nn, NFR-n>
 **Depends on:** <T00x, T00y | none>
 **Estimated size:** <S | M | L>
@@ -52,7 +52,7 @@ a specific file. No vague items ("works correctly").
 ## 6. Tests to write
 
 Named test cases with the file they live in and the exact behaviour asserted.
-Reference the quality strategy in specification.md §12.
+Reference the quality strategy in docs/specification.md §12.
 
 ## 7. Definition of done
 
@@ -65,4 +65,4 @@ Reference the quality strategy in specification.md §12.
 ## 8. Notes and gotchas
 
 Known traps, platform quirks, performance constraints, and anything in
-specification.md §16 (assumptions / open items) relevant to this ticket.
+docs/specification.md §16 (assumptions / open items) relevant to this ticket.

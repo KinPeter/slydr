@@ -59,8 +59,8 @@ The repository is **empty** apart from planning documents. At `C:\Users\PeterKin
 there are exactly these items and nothing else:
 
 ```
-specification.md
-user-requirements.md
+docs/specification.md
+docs/user-requirements.md
 tasks/            (ticket files, _TEMPLATE.md, README.md)
 docs/codemie/     (analytics JSON exported by the CodeMie tooling; not project source)
 ```
@@ -79,7 +79,7 @@ There are no exported symbols, scripts or dependencies to consume.
 
 ### 4.1 Target file tree
 
-Create exactly these files (the `tasks/`, `specification.md` and `user-requirements.md`
+Create exactly these files (the `tasks/`, `docs/specification.md` and `docs/user-requirements.md`
 items already exist and are committed untouched):
 
 ```
@@ -660,8 +660,8 @@ Perform in this order from `C:\Users\PeterKin\code\slydr`:
 3. Run the verifications in §5.
 4. `git init -b main`, then verify `git status` lists `node_modules/` as ignored.
 5. Stage by name: `git add package.json package-lock.json tsconfig.base.json .gitignore
-   .gitattributes .nvmrc scripts shared server client specification.md user-requirements.md
-   tasks` (not `docs/`, which is ignored tool output).
+   .gitattributes .nvmrc scripts shared server client docs/specification.md docs/user-requirements.md
+   tasks` (not `docs/codemie/`, which is ignored tool output).
 6. Run `git status` and confirm no `node_modules`, `dist`, `.env` or other unintended file is
    staged.
 7. Commit with message `chore: scaffold npm workspaces monorepo` ending with the
@@ -712,7 +712,7 @@ Perform in this order from `C:\Users\PeterKin\code\slydr`:
       ignored.
 - [ ] `.nvmrc` contains `22`.
 - [ ] `git log --oneline` shows exactly one commit; `git ls-files` contains
-      `specification.md`, `user-requirements.md`, the `tasks/` files and all files of §4.1,
+      `docs/specification.md`, `docs/user-requirements.md`, the `tasks/` files and all files of §4.1,
       and contains no path beginning `node_modules/` or `dist/`.
 - [ ] No `README.md` exists at the repo root, and no file under `tasks/` was modified.
 

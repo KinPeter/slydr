@@ -58,7 +58,7 @@ step (`npm run docs:check`), so documentation drift fails the build.
 - A `docs/` directory, a CONTRIBUTING guide, a CHANGELOG, a LICENSE file or any translation.
   **Decision (not specified):** §13.3 names only the README as a required document, so the
   README is the single documentation file; the ticket index (`tasks/README.md`) and
-  `specification.md` already serve contributors.
+  `docs/specification.md` already serve contributors.
 - Documenting `SLYDR_ROOT` as a user feature. The specification forbids it in the quick start
   (§3.1); it appears once, in the Testing section, labelled test-only.
 
@@ -104,7 +104,7 @@ The repository is **not** empty. The following exists:
   numeric collator sorts `IMG_2.jpg` before `IMG_10.jpg`.
 
 Where this ticket's text and the running application disagree, the **running application and
-specification.md win** — see §4.1 step 1.
+docs/specification.md win** — see §4.1 step 1.
 
 ## 4. Implementation detail
 
@@ -149,7 +149,7 @@ specification.md win** — see §4.1 step 1.
 - Do not include the author's real username or machine paths. Use `<you>` or `~`.
 - No marketing superlatives and no unverifiable claims ("blazing fast"). Quantities come from
   the specification (limits, timings) and are stated as design targets, not guarantees.
-- Every internal link must resolve (`specification.md`, `tasks/README.md`, anchors). Use
+- Every internal link must resolve (`docs/specification.md`, `tasks/README.md`, anchors). Use
   relative links only.
 - No `TODO`, `TBD`, `FIXME`, "coming soon" or empty sections. The file must end with a
   complete sentence and a single trailing newline.
@@ -503,7 +503,7 @@ not exist or cannot be read.
 
 ## Project documents
 
-- [`specification.md`](specification.md) — the technical specification this project is built from.
+- [`docs/specification.md`](docs/specification.md) — the technical specification this project is built from.
 - [`tasks/README.md`](tasks/README.md) — the ordered development tickets.
 ````
 
@@ -601,7 +601,7 @@ per env var, the three cache paths, etc.) and derive each negative case by repla
 fragment of it. Also a `validInput(overrides)` helper supplying
 `packageJson = { scripts: { dev, build, start, test, lint, format, typecheck, fixtures, 'check:bundle', 'smoke:prod', 'docs:check' }, engines: { node: '>=22' } }`,
 `imageExtensionsSource` containing the nine extensions in a `new Set([...])`, and
-`fileExists = rel => ['specification.md', 'tasks/README.md'].includes(rel)`.
+`fileExists = rel => ['docs/specification.md', 'tasks/README.md'].includes(rel)`.
 
 | Test name | Asserts |
 |---|---|

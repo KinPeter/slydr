@@ -181,8 +181,8 @@ package-lock.json
 
 # Planning documents are authored by hand and must not be reflowed.
 tasks
-specification.md
-user-requirements.md
+docs/specification.md
+docs/user-requirements.md
 refinement.md
 
 # Tool output (CodeMie analytics exports), not project source.
@@ -601,8 +601,8 @@ The lint-rule test is specified in §6.
 
 After adding the configuration, run `npm run format` once. It rewrites all files created by
 T001 (and T002) to the Prettier style, then `npm run format:check` must pass. Commit the
-reformatting in the same commit as the configuration. Because `tasks/`, `specification.md`
-and `user-requirements.md` are in `.prettierignore`, they are untouched.
+reformatting in the same commit as the configuration. Because `tasks/`, `docs/specification.md`
+and `docs/user-requirements.md` are in `.prettierignore`, they are untouched.
 
 ### 4.10 Cross-platform notes
 

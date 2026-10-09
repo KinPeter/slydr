@@ -225,7 +225,7 @@ export function shouldOpen(ctx: { argv: string[]; env: NodeJS.ProcessEnv }): boo
 
 **Root `package.json`** (merge): `"start": "node server/dist/index.js --open"`. It invokes `node` directly: no shell-specific syntax, no dependence on the working directory, and no workspace indirection that could swallow Ctrl+C. Also add `"check:bundle": "npm run size:client"` (report-only, see T019) and `"smoke:prod": "node scripts/smoke-prod.mjs"` (report-only for time figures). Do not touch the other root scripts.
 
-**Decision (not specified): `SLYDR_NO_OPEN` is a new documented environment variable.** Specification §13.2 is amended with this row (done in `specification.md`); add it also to the `server/src/config/env.ts` doc comment and, via T041, the README configuration table:
+**Decision (not specified): `SLYDR_NO_OPEN` is a new documented environment variable.** Specification §13.2 is amended with this row (done in `docs/specification.md`); add it also to the `server/src/config/env.ts` doc comment and, via T041, the README configuration table:
 
 | Variable | Default | Purpose |
 |---|---|---|
