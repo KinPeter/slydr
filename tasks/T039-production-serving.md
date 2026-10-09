@@ -31,7 +31,7 @@ This ticket adds that production path: static hosting with correct caching and t
 
 - The anti-FOUC script itself and the decision to ship it as a same-origin file — **T021** (restated here, not re-decided).
 - The dev-mode browser opening via `vite --open` and `npm run dev` — **T019**; it must keep working unchanged.
-- The Playwright `webServer` that starts this production server — **T038**.
+- Browser-driven end-to-end runs against this production server — out of scope for v1.
 - CI workflow changes (running the built-output tests, `check:bundle` and `smoke:prod` after the build step) — **T040**.
 - README prose about install and run — **E25**; this ticket only adds the facts listed in the definition of done.
 - The API routes, guards and error envelope themselves — **T008–T018**.
@@ -42,7 +42,7 @@ The monorepo (npm workspaces `shared/`, `server/`, `client/`, ESM, TypeScript st
 
 - **Server (T008–T018).** `server/src/app.ts` is an app factory that never calls `listen`; it installs, in this order, the `Host` check (`403 FORBIDDEN_HOST` unless `localhost`, `127.0.0.1` or `[::1]`, optional port), the method guard (`405 METHOD_NOT_ALLOWED` for anything but `GET`/`HEAD`), the `/api` routers, and the error-envelope middleware (`{ "error": { "code", "message" } }`, never leaking OS messages or absolute paths). `ApiError` carries a code and HTTP status. `server/src/index.ts` resolves and validates the jail root, binds strictly `127.0.0.1`, uses `PORT` (default `4317`) retrying `+1..+9` on `EADDRINUSE`, and logs structured single-line records honouring `SLYDR_QUIET`. Env vars: `PORT`, `SLYDR_ROOT` (test-only), `SLYDR_CACHE_DIR`, `SLYDR_CACHE_MAX_MB` (default `500`), `SLYDR_QUIET`.
 - **Client (T019, T021).** `client` builds with `vite build` into `client/dist` (`index.html`, hashed files under `client/dist/assets/`, source maps, no `base`). `client/public/theme-init.js` is copied verbatim to `client/dist/theme-init.js`. `client/index.html` contains `<meta name="color-scheme" content="light dark">` and, after it, `<script src="/theme-init.js"></script>`. The root scripts include T002's `typecheck` (builds `shared` first, so a clean checkout type-checks) and `build` (typecheck, then build `shared`, `server` and `client`), which this ticket does not change; `"size:client": "node scripts/check-client-size.mjs"` (gzips `client/dist/assets/*.js|css`, prints the total and warns above 300 KB, always exits `0`), and `dev`/`dev:server`/`dev:client` (the latter passes `--open` to Vite; the server's own dev script is `tsx watch src/index.ts`).
-- **Server entry (T009).** `server/src/index.ts` exports `main()` and `BIND_HOST`, starts `main()` only when it is the entry file, and already installs `SIGINT`/`SIGTERM` handling through `installShutdown` (graceful close, exit `0`). T038's launcher imports and calls `main()` itself.
+- **Server entry (T009).** `server/src/index.ts` exports `main()` and `BIND_HOST`, starts `main()` only when it is the entry file, and already installs `SIGINT`/`SIGTERM` handling through `installShutdown` (graceful close, exit `0`).
 - **The CSP/inline-script decision recorded in T021 (binding for this ticket).** The pre-paint theme script is a separate same-origin classic file loaded with a parser-blocking `<script src="/theme-init.js"></script>` in `<head>`. It satisfies `script-src 'self'` with **no hash, no nonce and no `'unsafe-inline'`**. This ticket therefore must **not** narrow `script-src` below `'self'` and must **not** compute or append any hash. Neither `defer`, `async` nor `type="module"` may appear on that tag.
 - **Env table.** This ticket adds one variable, `SLYDR_NO_OPEN` (see §4.7), to the server's documented env vars (`server/src/config/env.ts` and the README configuration table).
 
@@ -58,7 +58,7 @@ Express 5 note: the router uses `path-to-regexp` v8, so a bare `*` route pattern
 | 2 | SPA fallback | **None.** The app has no router and no deep links (spec §2.3 and §16.1 A2; §3.4 does not mention a fallback), so unknown non-API paths return `404 text/plain`, not `index.html`. A reload of `/` is the only reload that exists. |
 | 3 | Unknown `/api/*` | JSON `404` with `{ "error": { "code": "NOT_FOUND", "message": "Unknown API endpoint." } }`, never HTML. |
 | 4 | Missing `client/dist` | If the directory has no `index.html`: serve API only and log one warning (this is the normal state under `tsx watch` in development). If the process was started with `--open` (i.e. through `npm start`), exit `1` with `Client build not found at <dir>. Run "npm run build" first.` |
-| 5 | Auto-open trigger | Opt-**in** by the start script: only `npm start` passes `--open`. `tsx watch` (dev), Playwright and tests never pass it, so they cannot spawn a browser by accident. Disabled even with `--open` by `--no-open`, by `SLYDR_NO_OPEN` set to `1` or `true`, or by `NODE_ENV=test`. |
+| 5 | Auto-open trigger | Opt-**in** by the start script: only `npm start` passes `--open`. `tsx watch` (dev) and tests never pass it, so they cannot spawn a browser by accident. Disabled even with `--open` by `--no-open`, by `SLYDR_NO_OPEN` set to `1` or `true`, or by `NODE_ENV=test`. |
 | 6 | Browser opener | Own helper `server/src/openBrowser.ts` on `child_process.spawn`, not the `open` package (comparison in §4.7). |
 | 7 | Banner | `Slydr is running at http://127.0.0.1:<port>` printed to stdout after a successful bind, honouring `SLYDR_QUIET` (consistent with "quiet suppresses non-error logs"). |
 | 8 | Setting `NODE_ENV` | Not used to select production mode: `NODE_ENV=production node ...` is shell-specific syntax and fails in Windows `cmd`/PowerShell. Production behaviour is determined by the presence of `client/dist` and by the `--open` flag. (The server only *reads* `NODE_ENV=test`, which Vitest sets, as an opt-out from opening a browser.) |
@@ -205,7 +205,7 @@ must start, print the banner, serve `/` with the HTML, and answer `/api/health`.
 
 ### 4.6 `server/src/index.ts` changes
 
-Add inside `main()` (T009 exports it; the module still starts `main()` only when it is the entry file, which is why T038's launcher calls `main()` explicitly), without disturbing the existing jail validation, loopback bind and port retry:
+Add inside `main()` (T009 exports it; the module still starts `main()` only when it is the entry file), without disturbing the existing jail validation, loopback bind and port retry:
 
 1. Parse flags from `process.argv.slice(2)`: `--open` and `--no-open` (no argument-parsing dependency).
 2. Compute `clientDir = fileURLToPath(new URL('../../client/dist', import.meta.url))` and check `fs.existsSync(path.join(clientDir, 'index.html'))` (decision 4 in §4.1). Set `config.clientDir = clientDir` (T009 step 1's `config`) before `createApp(config, logger)` only when it exists. When it does not exist: if `--open` was given, print `Client build not found at <dir>. Run "npm run build" first.` to stderr and exit `1` before binding a port; otherwise log the single warning "client/dist not found; serving API only. Run npm run build." and continue with API only (decision 4 in §4.1).
@@ -285,16 +285,16 @@ If `openBrowser` returns `false` or the child errors, the banner has already tol
 
 **Bundle size (target 300 KB gzipped, excluding images; reported, not enforced).** T019 already provides `scripts/check-client-size.mjs` (`gzipSync` over every `.js` and `.css` in `client/dist/assets/`, sums them, prints per-file and total sizes, warns above `300 * 1024` bytes, always exits `0`). **Do not write a second copy, and do not define a second measure.** This ticket exposes it under the name the spec's readers expect: `npm run check:bundle` (alias of `npm run size:client`). Run after `npm run build`. `theme-init.js` (under 1 KB) and `index.html` are not counted, consistent with T019's definition; sourcemaps are excluded because they are not `.js`/`.css` files. The app runs locally, so there is no strict budget.
 
-**Startup time and cross-cwd run: `scripts/smoke-prod.mjs`.** A dependency-free Node script that proves the production path end to end:
+**Startup time and cross-cwd run: `scripts/smoke-prod.mjs`.** A dependency-free Node script that proves the production path from spawn to served HTML:
 
 1. Require `server/dist/index.js` and `client/dist/index.html` to exist; otherwise exit `2` with "Run npm run build first."
-2. Create two temp directories (jail root with a file `hello.jpg`, and a cache dir). Spawn `process.execPath` with arguments `[<abs server/dist/index.js>, '--no-open']`, **`cwd: os.tmpdir()`**, env `{ ...process.env, PORT: '4517', SLYDR_ROOT: <root>, SLYDR_CACHE_DIR: <cache>, SLYDR_NO_OPEN: '1' }` (not quiet: the banner is the readiness signal). Port allocation across the repo: 4417 Playwright (T038), 4517 this script, 4617 the CI check scripts (T040).
+2. Create two temp directories (jail root with a file `hello.jpg`, and a cache dir). Spawn `process.execPath` with arguments `[<abs server/dist/index.js>, '--no-open']`, **`cwd: os.tmpdir()`**, env `{ ...process.env, PORT: '4517', SLYDR_ROOT: <root>, SLYDR_CACHE_DIR: <cache>, SLYDR_NO_OPEN: '1' }` (not quiet: the banner is the readiness signal). Port allocation across the repo: 4517 this script, 4617 the CI check scripts (T040).
 3. Read stdout until the line matching `/http:\/\/127\.0\.0\.1:(\d+)/` appears (10 s timeout, then fail); record `t = performance.now() - spawnTime`. The captured port is the actual bound port.
 4. With `fetch`: `GET /api/health` → `200`; `GET /` → `200`, header `content-security-policy` equals the spec string, `x-content-type-options: nosniff`, body contains `<div id="root">`; `GET /theme-init.js` → `200`; `GET /api/fs/list?path=` → `200`; `GET /api/does-not-exist` → `404` with JSON `error.code === 'NOT_FOUND'`; `GET /nope` → `404`.
 5. Kill the child (`child.kill()`), remove the temp directories, and perform the whole sequence **twice**; the second iteration is the "warm" measurement. If its time from spawn to the first successful `GET /` exceeds `Number(process.env.SLYDR_STARTUP_TARGET_MS ?? 2000)` milliseconds, print a warning; **never fail on a time figure** (the app runs locally and slow CI runners would only make the gate flaky). **Decision (not specified):** the 2 s spec target covers browser time as well; this script measures the server's share (process start to HTML served). Functional failures (no banner within 10 s, wrong status or header) still exit `1`.
 6. Print one summary line: `smoke:prod ok — cold <n> ms, warm <n> ms, port <p>`.
 
-The browser-side share of NFR-8 (HTML to rendered explorer) is observed by the Playwright suite (T038) as an annotation; it is not a gate in this ticket or anywhere else.
+The browser-side share of NFR-8 (HTML to rendered explorer) is not a gate in this ticket or anywhere else.
 
 **NFR-9 (no outbound requests).** There is nothing to configure beyond the CSP; the guarantees are asserted by tests: the built `index.html` and every built `.css` file contain no `http://` or `https://` reference to an origin (the only permitted literal is the SVG namespace `http://www.w3.org/2000/svg`), no `<link>`/`<script>` points off-origin, and the CSP has no `connect-src`, so `default-src 'self'` applies. JavaScript bundles are deliberately **not** scanned for URL strings: React's production build embeds `https://react.dev/errors/…` message text, which is never requested.
 
@@ -358,7 +358,7 @@ Pure unit tests with an injected `spawnFn` stub that records its arguments and r
 
 ### 6.4 Smoke script
 
-`scripts/smoke-prod.mjs` is itself the end-to-end check for criteria 9 to 12 and 14 (server side). It is run by `npm run smoke:prod` and added by T040 to the CI workflow after the build step (report-only for time figures). It has no Vitest wrapper.
+`scripts/smoke-prod.mjs` is itself the verification for criteria 9 to 12 and 14 (server side). It is run by `npm run smoke:prod` and added by T040 to the CI workflow after the build step (report-only for time figures). It has no Vitest wrapper.
 
 ### 6.5 Manual checks (record the result in the pull request)
 
@@ -391,6 +391,6 @@ Pure unit tests with an injected `spawnFn` stub that records its arguments and r
 - **`express.static` and Express 5.** `express.static` is unchanged in Express 5. Do not add a catch-all `app.get('*', …)` or `app.get('/{*splat}', …)` fallback: there is no client router, and a fallback would turn API typos into HTML responses (criteria 5 and 6).
 - **Antivirus and first-run latency on Windows.** The first start after a build can be noticeably slower because of real-time scanning of fresh `dist` files; this is why the smoke script measures the second (warm) run against the target and only reports the cold run.
 - **Caching during development of the app itself.** `no-cache` on HTML plus hashed asset names means a rebuilt app shows up on a normal reload. If a developer sees a stale page, the cause is almost always a service worker or a manually pinned cache from another project served on the same `127.0.0.1` port.
-- **Out of scope but adjacent.** CI wiring of `smoke:prod` and Playwright against the production server belongs to T040 and T038; this ticket supplies the commands they call.
+- **Out of scope but adjacent.** CI wiring of `smoke:prod` against the production server belongs to T040; this ticket supplies the command it calls.
 
 

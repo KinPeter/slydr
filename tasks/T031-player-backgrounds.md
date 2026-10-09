@@ -53,6 +53,7 @@ player that consults the theme.
 - Theme tokens themselves. `--player-bg` already exists with the correct value in both
   themes; this ticket consumes it and must not redefine it.
 - Any server change. The background reuses an already-requested URL and adds no endpoint.
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 
@@ -736,7 +737,7 @@ Render the whole player with a stubbed `AppStateProvider` and a two-image playli
   CSS is asserted as source text (§6) and the components are asserted on class names and
   attributes. Do not write a test that expects a real computed `filter` value — it will pass
   vacuously or fail confusingly.
-- **Theme changes mid-show are harmless but untested in e2e.** The player has no theme
+- **Theme changes mid-show are harmless but not covered by automated tests; verified manually.** The player has no theme
   switch, so the only way to change the theme while the player is open is an OS-level change
   with no stored override. The flat background simply repaints. Nothing needs to react in
   JavaScript, and nothing should.

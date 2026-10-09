@@ -15,7 +15,7 @@ URLs to a React client. This ticket builds the foundation that every later serve
 sits on: a testable Express application factory, the environment-configuration reader, the
 three transport guards that keep a locally bound HTTP server safe from hostile web pages,
 the single JSON error envelope that all API errors must use, and the `/api/health`
-endpoint that the dev proxy and the end-to-end harness poll for readiness.
+endpoint that the dev proxy polls for readiness (health endpoint only).
 
 Nothing in this ticket touches the file system beyond reading the server's own
 `package.json` for a version string. Path resolution, listing, image streaming and
@@ -54,6 +54,7 @@ thumbnails all come later and all depend on the error envelope and guards create
 - The thumbnail cache directory being created on disk; this ticket only *reads* the
   `SLYDR_CACHE_DIR` and `SLYDR_CACHE_MAX_MB` settings into config so that later tickets
   have them available.
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 

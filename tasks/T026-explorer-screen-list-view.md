@@ -39,6 +39,7 @@ This ticket delivers the complete explorer shell (sticky header, scrollable body
 - **The slide show player — T030 and later.**
 - The `/api/fs/list`, `/api/fs/root` endpoints themselves (T012), the thumbnail endpoint (T017), the base component library (T022), the theme system and `ThemeToggle` (T021), the application state machine (T024), the `localStorage` persistence layer (T023) and the typed API client with `useAbortableRequest` (T025). All of these are consumed, not built.
 - Re-sorting or re-filtering entries on the client. The server already does both.
+- **End-to-end (e2e) testing is out of scope.**
 
 ## 3. Prerequisites and assumed state
 
@@ -229,7 +230,7 @@ Spec §7.1. The screen is a four-row flex column that fills the viewport: header
 
 The header and footer stay on screen because the body is the only element that scrolls (they are flex siblings of it, not `position: sticky` children; this satisfies "sticky" in spec §7.1 and cannot be broken by an ancestor's `overflow`).
 
-**The body is the only scroll container.** It carries `data-explorer-scroll` (used by the T028 measurement procedure and by e2e tests). **Banners never live inside it:** the restore notice, the inline error and the truncation notice render in the `.notices` region between the header and the body, so they never scroll with the entries and the entry region always starts at scroll offset 0 (T028 relies on this and has no scroll-margin logic).
+**The body is the only scroll container.** It carries `data-explorer-scroll` (used by the T028 measurement procedure and as a unit/component-test hook). **Banners never live inside it:** the restore notice, the inline error and the truncation notice render in the `.notices` region between the header and the body, so they never scroll with the entries and the entry region always starts at scroll offset 0 (T028 relies on this and has no scroll-margin logic).
 
 `ExplorerScrollContext.ts` exposes the scroll element to descendants:
 
@@ -328,7 +329,7 @@ Base-1024 steps, one decimal below 10 and none above, locale-aware decimal separ
 
 Hidden entries are filtered **server-side**, so they do not reach the browser unless `showHidden=true` is sent. The show-hidden toggle therefore only flips `AppState.explorer.showHidden` (`actions.setShowHidden`; persisted to `slydr.explorer.showHidden` by T024's effect through T023) and lets `useDirectoryListing` refetch.
 
-Hidden entries that arrive because `showHidden=true` are rendered **exactly like every other entry** (FR-14.5): same colours, same opacity, no badge. Do not add any hidden-specific style. Keep the `data-hidden` attribute on the row (it is a test and e2e hook, not a styling hook) and add a visually hidden `", hidden"` suffix to the row's accessible name so screen-reader users still get the information the sighted user does not. (Decision (not specified).)
+Hidden entries that arrive because `showHidden=true` are rendered **exactly like every other entry** (FR-14.5): same colours, same opacity, no badge. Do not add any hidden-specific style. Keep the `data-hidden` attribute on the row (it is a unit/component-test hook, not a styling hook) and add a visually hidden `", hidden"` suffix to the row's accessible name so screen-reader users still get the information the sighted user does not. (Decision (not specified).)
 
 The toggle is an `IconButton` (`lucide-react` `Eye` / `EyeOff`, `pressed={showHidden}`, `aria-label="Show hidden items"`). It is a toggle button, not a T022 `Checkbox`: the `Checkbox` is the control of the configuration screen and always shows a text label, while this control must collapse to an icon below 1024 px. From 1024 px a visible text label **"Show hidden items"** is rendered next to the icon (a `<span>` inside the same button, so the accessible name does not change).
 

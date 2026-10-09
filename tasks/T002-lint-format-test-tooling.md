@@ -42,7 +42,8 @@ concatenation of input into a path is a defect everywhere except inside the jail
 ### Out of scope
 
 - Any application, shared-domain or UI code — **T004** onwards.
-- Playwright configuration and `test:e2e` — **T038** (T040 only wires the e2e run into CI). The root Vitest `tooling` project for `scripts/` and `e2e/support/` tests — **T037**.
+- End-to-end (e2e) testing is out of scope.
+- The root Vitest `tooling` project for `scripts/` tests — **T037**.
 - GitHub Actions — **T003**.
 - Type-aware ESLint rules (`recommendedTypeChecked`, `parserOptions.projectService`).
   *Decision (not specified):* use the non-type-aware `recommended` set. It is faster, needs no
@@ -115,7 +116,7 @@ package.json                           (modify: scripts only)
 ### 4.2 Root `package.json` scripts
 
 Replace the scripts block with the following. The other keys (name, workspaces, engines,
-devDependencies, etc.) are unchanged. `dev`, `start` and `test:e2e` stay as the T001 stubs.
+devDependencies, etc.) are unchanged. `dev` and `start` stay as the T001 stubs.
 
 ```json
 "scripts": {
@@ -124,7 +125,6 @@ devDependencies, etc.) are unchanged. `dev`, `start` and `test:e2e` stay as the 
   "start": "node scripts/not-implemented.mjs start T039",
   "test": "npm run build -w @slydr/shared && vitest run",
   "test:watch": "npm run build -w @slydr/shared && vitest",
-  "test:e2e": "node scripts/not-implemented.mjs test:e2e T038",
   "lint": "eslint .",
   "format": "prettier --write .",
   "format:check": "prettier --check .",
@@ -174,7 +174,6 @@ dist
 coverage
 .vite
 test-results
-playwright-report
 blob-report
 .slydr-cache
 package-lock.json
@@ -269,7 +268,6 @@ export default defineConfig([
     '**/coverage/**',
     '**/.vite/**',
     '**/test-results/**',
-    '**/playwright-report/**',
     '**/blob-report/**',
     '**/.slydr-cache/**',
   ]),
@@ -501,10 +499,8 @@ Settings explained:
   component tests.
 - Do **not** set `passWithNoTests`. The toolchain tests below guarantee every project has at
   least one test, so an accidentally empty suite fails rather than passes.
-- The Playwright `*.e2e.ts` files from T038 do not match `*.test.*` and are never picked up
-  by Vitest.
 - T037 later adds a fourth project, `tooling` (node environment, `include:
-  ['scripts/**/*.test.{ts,mjs}', 'e2e/support/**/*.test.ts']`), to the root `projects` list for
+  ['scripts/**/*.test.{ts,mjs}']`), to the root `projects` list for
   tests of repository scripts. This ticket does not create it.
 
 `client/test/setup.ts`:
@@ -632,7 +628,7 @@ and `user-requirements.md` are in `.prettierignore`, they are untouched.
 - [ ] `npm test` exits 0 from a state with `shared/dist` deleted, and its output lists three
       projects named `shared`, `server` and `client`.
 - [ ] `npm run build` exits 0 and runs `typecheck` before compiling.
-- [ ] `npm run dev`, `npm start` and `npm run test:e2e` still exit non-zero via the T001 stub.
+- [ ] `npm run dev` and `npm start` still exit non-zero via the T001 stub.
 - [ ] `eslint.config.js` is an ESLint 9 flat config (`export default defineConfig([...])`);
       no `.eslintrc*` file exists.
 - [ ] Adding `const x = req.query.path; ` is not flagged, but adding

@@ -1,15 +1,15 @@
-# T040 — Cross-platform CI: complete the workflow with the lockfile gate, NFR rule checks and the Playwright leg
+# T040 — Cross-platform CI: complete the workflow with the lockfile gate and NFR rule checks
 
 **Epic:** E24 — Cross-platform verification on Windows/macOS/Linux in CI, including the `sharp` prebuilt check
-**Spec sections:** §12.5, §2.3 (last paragraph), NFR-1, NFR-7, NFR-9, §3.1, §3.4, §12.4, §12.6
-**Depends on:** T003, T038, T039
+**Spec sections:** §12.5, §2.3 (last paragraph), NFR-1, NFR-7, NFR-9, §3.1, §3.4, §12.6
+**Depends on:** T003, T039
 **Estimated size:** M
 
 ---
 
 ## 1. Context
 
-Slydr must run identically on Windows, macOS and Linux, and its security model rests on a handful of properties that are easy to break by accident and invisible in a green unit-test run: the server listens on loopback only, never speaks CORS, never makes an outbound network request, and never needs a compiler toolchain at install time. T003 already created the workflow `.github/workflows/ci.yml` (job id `verify`, six legs `{windows-latest, macos-latest, ubuntu-latest}` × Node `{22, 24}`) together with `scripts/check-install-log.mjs` and `scripts/verify-sharp.mjs`, which prove that `sharp` came from a prebuilt binary. This ticket completes that workflow: it adds the five-platform lockfile coverage to the existing `sharp` check, three repository-owned NFR rule checks (static, built output, runtime), the production smoke run from T039, the Playwright leg from T038, and artifact upload on failure.
+Slydr must run identically on Windows, macOS and Linux, and its security model rests on a handful of properties that are easy to break by accident and invisible in a green unit-test run: the server listens on loopback only, never speaks CORS, never makes an outbound network request, and never needs a compiler toolchain at install time. T003 already created the workflow `.github/workflows/ci.yml` (job id `verify`, six legs `{windows-latest, macos-latest, ubuntu-latest}` × Node `{22, 24}`) together with `scripts/check-install-log.mjs` and `scripts/verify-sharp.mjs`, which prove that `sharp` came from a prebuilt binary. This ticket completes that workflow: it adds the five-platform lockfile coverage to the existing `sharp` check, three repository-owned NFR rule checks (static, built output, runtime), the production smoke run from T039, and artifact upload of the install log and `ci-logs/` on failure.
 
 There is deliberately no bundle-size or startup-time gate (the app runs locally; NFR-8 is a target). The workflow only prints those figures.
 
@@ -19,23 +19,22 @@ There is deliberately no bundle-size or startup-time gate (the app runs locally;
 
 - Editing `.github/workflows/ci.yml` (keep job id `verify`, its name, the matrix, `shell: bash`, `fail-fast: false` and every step T003 defined):
   - build runs **before** the unit tests, so the built-output tests (T039's `builtHtml.test.ts`) really run on every leg;
-  - format check, the three NFR rule steps, `smoke:prod`, `check:bundle` (both report-only), Playwright browser install with a cache keyed on the Playwright version, the end-to-end run, artifact upload on failure, an aggregate `ci-ok` job and a weekly scheduled run.
+  - format check, the three NFR rule steps, `smoke:prod`, `check:bundle` (both report-only), artifact upload of the install log and `ci-logs/` on failure, an aggregate `ci-ok` job and a weekly scheduled run.
 - Extending `scripts/verify-sharp.mjs` (T003) with the lockfile platform-coverage check and an SVG render check; the pure lockfile logic lives in `scripts/ci/lib/sharp-lockfile.mjs`.
-- Updating T003's tests: `server/test/ci/workflow.test.ts` (order, e2e now expected) and `server/test/scripts/verifySharp.test.ts` (new lockfile and SVG cases).
+- Updating T003's tests: `server/test/ci/workflow.test.ts` (new order, no browser-test leg) and `server/test/scripts/verifySharp.test.ts` (new lockfile and SVG cases).
 - Repository-owned check scripts under `scripts/ci/` (plain ESM `.mjs`, no build step): `check-nfr.mjs` with modes `--static`, `--built`, `--runtime`, and `lib/` helpers (pure rule functions, process spawn helper, tiny fixture builder, outbound-connection preload, directory walker).
 - Vitest tests for the check scripts, `scripts/ci/test/*.test.mjs`, run by `npm test` through the root `tooling` project that T037 created.
 - Root `package.json` scripts: `ci:nfr:static`, `ci:nfr:built`, `ci:nfr:runtime`.
-- `.gitignore`: `.playwright-browsers/`, `ci-logs/`.
+- `.gitignore`: `ci-logs/`.
 
 ### Out of scope
 
-- Playwright configuration and specs, including every CI-conditional Playwright key (`forbidOnly`, `retries`, reporters, `trace`, `outputDir`): **T038** owns them. This ticket does not edit `playwright.config.ts`.
-- The browser-side NFR-9 guard (no off-origin request, no CSP console error): **T038**'s `guard` fixture fails every e2e test on either, so no separate browser script exists here.
+- Browser-driven end-to-end configuration and specs: out of scope for v1. This ticket adds no browser-install and no browser-test steps and edits no browser-test config.
+- No separate browser-side NFR-9 script exists here; the server-side NFR-9 proof is the `R8-no-outbound` runtime check (§4.8).
 - Bundle-size or startup-time gates. T019's `size:client` and T039's `smoke:prod` print figures and exit `0`; this ticket only calls them.
 - The `docs:check` step: **T041** creates the script and adds the step to this workflow (T041 depends on this ticket).
 - The fixture tree generator (T037) and static hosting, CSP and `npm start` (T039); they are consumed or verified from the outside.
 - Release automation, Dependabot, matrix legs for ARM Linux or Intel macOS (the lockfile check covers their prebuilt packages statically), README text.
-- Firefox and WebKit projects (decision: Chromium only; specification §12.5 is amended accordingly).
 
 ## 3. Prerequisites and assumed state
 
@@ -45,11 +44,11 @@ There is deliberately no bundle-size or startup-time gate (the app runs locally;
 - **T009** provides `server/src/index.ts` (compiled to `server/dist/index.js`): exports `main()` and `BIND_HOST = '127.0.0.1'`, starts `main()` only when it is the entry file, reads `PORT` (default `4317`, tries `+1` to `+9`), `SLYDR_ROOT`, `SLYDR_CACHE_DIR`, `SLYDR_CACHE_MAX_MB`, `SLYDR_QUIET`, binds with `server.listen(port, host)` where `host` comes from `BIND_HOST`, and writes one JSON object per line to stdout, for example `{"ts":"…","level":"info","event":"server.listening","host":"127.0.0.1","port":4317,"url":"http://127.0.0.1:4317","root":"…","rootOverridden":false}`. When `SLYDR_ROOT` is set it logs a `level: "warn"` line containing `TEST-ONLY` before `server.listening`; that warning is exempt from `SLYDR_QUIET`.
 - **T008** provides the transport guards (`405 METHOD_NOT_ALLOWED`, `403 FORBIDDEN_HOST`, no CORS, error bodies `{ "error": { "code", "message" } }`).
 - **T039** provides static hosting of `client/dist`, `nosniff` and the CSP on the HTML document, `npm start`, and the opt-outs for browser auto-open: `SLYDR_NO_OPEN=1`, `--no-open`, `NODE_ENV=test`; auto-open is opt-in through `--open`, which only `npm start` passes. It also provides `npm run smoke:prod` and `npm run check:bundle` (both exit `0` on size or time figures) and `server/test/builtHtml.test.ts` (skips itself when `client/dist` is missing).
-- **T037** created the root Vitest project `tooling` (`include: ['scripts/**/*.test.{ts,mjs}', 'e2e/support/**/*.test.ts']`).
-- **T038** provides `@playwright/test`, `playwright.config.ts` (with CI-conditional keys, `outputDir: 'test-results'`, HTML report in `playwright-report/`, `webServer` that builds and starts the production server on port 4417) and `npm run test:e2e`.
+- **T037** created the root Vitest project `tooling` (`include: ['scripts/**/*.test.{ts,mjs}']`).
+- No browser-driven test suite exists in v1; the workflow has no browser-install and no browser-test steps.
 - `sharp` (0.34.x) is a dependency of `server/`; prebuilt packages are `@img/sharp-<platform>-<arch>` and `@img/sharp-libvips-<platform>-<arch>`.
 
-Port allocation across the repository: 4417 Playwright (T038), 4517 `smoke:prod` (T039), 4617 the runtime check in this ticket.
+Port allocation across the repository: 4517 `smoke:prod` (T039), 4617 the runtime check in this ticket.
 
 ## 4. Implementation detail
 
@@ -57,7 +56,7 @@ Port allocation across the repository: 4417 Playwright (T038), 4517 `smoke:prod`
 
 ```
 .github/workflows/ci.yml                        # modify (keep job id verify)
-.gitignore                                      # + .playwright-browsers/  ci-logs/
+.gitignore                                      # + ci-logs/
 package.json                                    # + three scripts (see 4.3)
 scripts/verify-sharp.mjs                        # modify (T003): lockfile check + SVG render
 scripts/ci/lib/sharp-lockfile.mjs               # pure: REQUIRED_SHARP_PLATFORMS, checkLockfile, expectedPlatformPackage
@@ -89,7 +88,7 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    # Weekly drift detector (new sharp / Playwright / runner image). Monday 05:17 UTC.
+    # Weekly drift detector (new sharp / runner image). Monday 05:17 UTC.
     - cron: '17 5 * * 1'
 
 concurrency:
@@ -103,9 +102,6 @@ env:
   CI: 'true'
   NPM_CONFIG_FUND: 'false'
   NPM_CONFIG_AUDIT: 'false'
-  PW_BROWSERS: chromium
-  # One OS-independent browser cache location, read by `playwright install` and `playwright test`.
-  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
 
 jobs:
   verify:
@@ -169,29 +165,7 @@ jobs:
       - name: Client bundle size (reports, never fails on it)
         run: npm run check:bundle
 
-      - name: Resolve Playwright version
-        id: pw
-        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: .playwright-browsers
-          key: pw-${{ runner.os }}-${{ runner.arch }}-${{ steps.pw.outputs.version }}-${{ env.PW_BROWSERS }}
-
-      # `playwright install` skips browsers that are already present, so it is safe on a cache hit.
-      # Linux also needs OS libraries (apt), which the cache does not carry.
-      - name: Install Playwright browsers (Linux, with OS dependencies)
-        if: runner.os == 'Linux'
-        run: npx playwright install --with-deps $PW_BROWSERS
-
-      - name: Install Playwright browsers (Windows, macOS)
-        if: runner.os != 'Linux'
-        run: npx playwright install $PW_BROWSERS
-
-      - name: End-to-end tests
-        timeout-minutes: 15
-        run: npm run test:e2e
+      # No browser-install and no browser-test steps in v1 (browser testing is out of scope).
 
       - name: Upload install log on failure
         if: failure()
@@ -201,14 +175,12 @@ jobs:
           path: install.log
           if-no-files-found: ignore
 
-      - name: Upload e2e and check diagnostics on failure
+      - name: Upload check diagnostics on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-${{ matrix.os }}-node${{ matrix.node }}
+          name: checks-${{ matrix.os }}-node${{ matrix.node }}
           path: |
-            test-results/
-            playwright-report/
             ci-logs/
           if-no-files-found: ignore
           retention-days: 14
@@ -229,8 +201,8 @@ Notes:
 1. **Job id stays `verify`** (T003). `ci-ok` needs it. The PR description tells the maintainer to mark `ci-ok` as the required status check.
 2. **No `--if-present`, `continue-on-error`, `|| true`** anywhere (T003 rule, still tested). `format:check` exists since T002.
 3. **No `nodedir` trick.** T003's install-log scan plus the `node_modules/sharp/build` check in `verify-sharp.mjs` already prove that nothing compiled; a second mechanism is not added.
-4. **Playwright's webServer** (T038) builds nothing: the `Build` step above produced `client/dist` and `server/dist`, and `npm run test:e2e` reuses them. Artifact paths match T038's `outputDir` (`test-results/`) and HTML report folder (`playwright-report/`); if T038 uses other names, fix the list here, not T038's config.
-5. **Chromium only** (decision recorded in specification §12.5); extend `PW_BROWSERS` if T038 ever adds projects.
+4. The `Build` step above produces `client/dist` and `server/dist` before the tests that need them. Failure artifacts are the install log and `ci-logs/`.
+5. Single-browser scope follows the specification (§12.5); there is no browser matrix in this workflow.
 6. The weekly `schedule:` is a decision, not specified; remove it if the maintainer does not want unprompted runs.
 7. T041 adds `- name: README checks` / `run: npm run docs:check` after `Lint`. T040 leaves no placeholder.
 
@@ -246,7 +218,7 @@ Notes:
 }
 ```
 
-All scripts exit `0` on success and `1` on any violation, print one line per finding as `FAIL <rule-id>: <message> (<file>[:line])`, and finish with `N checks passed` / `M failed`. They write nothing outside `os.tmpdir()` and `ci-logs/`. Add `.playwright-browsers/` and `ci-logs/` to `.gitignore`.
+All scripts exit `0` on success and `1` on any violation, print one line per finding as `FAIL <rule-id>: <message> (<file>[:line])`, and finish with `N checks passed` / `M failed`. They write nothing outside `os.tmpdir()` and `ci-logs/`. Add `ci-logs/` to `.gitignore`.
 
 ### 4.4 Extending `scripts/verify-sharp.mjs` (lockfile coverage and SVG)
 
@@ -295,11 +267,11 @@ Behaviour:
 4. `stop()` is idempotent: `child.kill()`, wait for `exit` up to 5 s, then `SIGKILL`; always remove the temp cache directory with `fs.rm(..., { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })` and never let a cleanup error mask the real failure.
 5. With `logFile`, `mkdir ci-logs/` and append every line to `ci-logs/<logFile>.log`.
 
-`fixture.mjs` exports `makeFixture(): Promise<{ root, cleanup }>`: `fs.mkdtemp(path.join(os.tmpdir(), 'slydr-ci-'))`, resolved with `fs.realpath` (macOS `/var` → `/private/var`), containing `Pictures/red.png` (1×1 PNG decoded from the canonical base64 `iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==`), `Pictures/Nested/blue.png` (same bytes), `Pictures/notes.txt`, `Pictures/.hidden/secret.png`, and an empty `empty/` folder. No symlinks (Windows runners may refuse them; symlink escape coverage belongs to T010's tests and T037/T038's fixtures).
+`fixture.mjs` exports `makeFixture(): Promise<{ root, cleanup }>`: `fs.mkdtemp(path.join(os.tmpdir(), 'slydr-ci-'))`, resolved with `fs.realpath` (macOS `/var` → `/private/var`), containing `Pictures/red.png` (1×1 PNG decoded from the canonical base64 `iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==`), `Pictures/Nested/blue.png` (same bytes), `Pictures/notes.txt`, `Pictures/.hidden/secret.png`, and an empty `empty/` folder. No symlinks (Windows runners may refuse them; symlink escape coverage belongs to T010's tests and T037's fixtures).
 
 ### 4.6 `scripts/ci/lib/nfr-rules.mjs` and `check-nfr.mjs --static`
 
-All scanners are pure functions of (POSIX relative path, file text) returning `Finding[]`, `@typedef {{ rule: string, file: string, line: number, message: string }} Finding`. `check-nfr.mjs --static` walks the repository with `lib/walk.mjs` (`walk(dir, { skipDirs, include })` over `fs.readdir(..., { withFileTypes: true })`, sorted, always skipping `node_modules`, `dist`, `.git`, `coverage`, `.fixtures`, `.playwright-browsers`, `test-results`, `playwright-report`, `ci-logs`) and applies each rule to the files in its scope. Rules report **all** findings, not the first. Helpers: `isTestFile(rel)` (`*.test.*`, `*.spec.*`, anything under `/test/`, `/tests/`, `/__tests__/`, `/e2e/`, `/fixtures/`), `stripComments(text)` (removes `/* */`, `<!-- -->` and line comments matching `(^|\s)//.*$`, replacing removed text with the same number of newlines; the leading-whitespace requirement keeps `http://` in strings intact), `lineOf(text, index)`.
+All scanners are pure functions of (POSIX relative path, file text) returning `Finding[]`, `@typedef {{ rule: string, file: string, line: number, message: string }} Finding`. `check-nfr.mjs --static` walks the repository with `lib/walk.mjs` (`walk(dir, { skipDirs, include })` over `fs.readdir(..., { withFileTypes: true })`, sorted, always skipping `node_modules`, `dist`, `.git`, `coverage`, `.fixtures`, `ci-logs`) and applies each rule to the files in its scope. Rules report **all** findings, not the first. Helpers: `isTestFile(rel)` (`*.test.*`, `*.spec.*`, anything under `/test/`, `/tests/`, `/__tests__/`, `/fixtures/`), `stripComments(text)` (removes `/* */`, `<!-- -->` and line comments matching `(^|\s)//.*$`, replacing removed text with the same number of newlines; the leading-whitespace requirement keeps `http://` in strings intact), `lineOf(text, index)`.
 
 | Id | Scope (non-test files) | Violation |
 |---|---|---|
@@ -345,7 +317,7 @@ Flow: `makeFixture()` → `startServer({ root, nodeArgs: ['--import', preloadHre
 | `R6-no-leak` | `GET /api/fs/list?path=does-not-exist` | `404 NOT_FOUND`; the raw body contains none of: the fixture root path (either separator style), `ENOENT`, `errno`, `syscall` (spec §3.4/§3.5). |
 | `R7-root-warning` | Inspect captured stdout | At least one line with `"level":"warn"` exists (spec §3.1). |
 | `R9-api-smoke` | `GET /api/fs/root`; `GET /api/fs/list?path=Pictures`; `GET /api/fs/images?path=Pictures&recursive=true`; `GET /api/image?path=Pictures/red.png`; same with `Range: bytes=0-9`; `GET /api/thumb?path=Pictures/red.png&size=128` twice (second with `If-None-Match` = first `etag`) | `root.path === ''`; list `counts` is `{ folders: 1, images: 1, files: 1 }` (the `.hidden` folder is filtered); images `count === 2`, `truncated === false`; image `200` `content-type: image/png`; ranged request `206`; thumb `200`, `content-type: image/webp`, `cache-control` contains `private`; conditional thumb `304`. Per-OS proof that Express, the jail, the scanner and `sharp` work together. |
-| `R8-no-outbound` | After all requests, read `outbound.jsonl` | Absent or empty (print its lines on failure). This is the server-side NFR-9 proof; the browser side is T038's `guard` fixture. |
+| `R8-no-outbound` | After all requests, read `outbound.jsonl` | Absent or empty (print its lines on failure). This is the server-side NFR-9 proof; there is no browser-side proof in v1. |
 
 Use `node:http` for requests that need a custom `Host`, global `fetch` elsewhere; 10 s timeout per request; collect failures instead of throwing so the whole table prints; compare paths only in POSIX form.
 
@@ -358,10 +330,10 @@ Use `node:http` for requests that need a custom `Host`, global `fetch` elsewhere
 
 Workflow
 - [ ] `.github/workflows/ci.yml` still defines exactly one matrix job `verify` (`fail-fast: false`, `os: [windows-latest, macos-latest, ubuntu-latest]` × `node: ['22', '24']`, `shell: bash`), `npm ci --foreground-scripts` is the only install, and `ci-ok` (`needs: [verify]`, `if: always()`) fails when any leg fails or is cancelled.
-- [ ] Step order: install, install-log check, `verify-sharp`, typecheck, lint, format check, `ci:nfr:static`, build, `ci:nfr:built`, `npm test`, `ci:nfr:runtime`, `smoke:prod`, `check:bundle`, Playwright install, `npm run test:e2e`, uploads.
+- [ ] Step order: install, install-log check, `verify-sharp`, typecheck, lint, format check, `ci:nfr:static`, build, `ci:nfr:built`, `npm test`, `ci:nfr:runtime`, `smoke:prod`, `check:bundle`, uploads.
 - [ ] No `continue-on-error`, `|| true`, `--if-present`, `npm install` or `pull_request_target` anywhere in the file; `permissions` is `contents: read`.
-- [ ] Playwright browsers are cached at `.playwright-browsers` with a key containing OS, arch, Playwright version and `PW_BROWSERS`; Linux installs with `--with-deps`, Windows and macOS without.
-- [ ] A failing e2e run uploads `e2e-<os>-node<n>` with `test-results/` and `playwright-report/`; a green run uploads nothing.
+- [ ] No browser-install and no browser-test steps exist in the workflow.
+- [ ] A failing run uploads `checks-<os>-node<n>` with `ci-logs/` (plus the install log); a green run uploads nothing.
 - [ ] Concurrency cancels superseded pull-request runs but never a run on `main`.
 
 `sharp` gate
@@ -377,9 +349,9 @@ NFR rule checks
 - [ ] No check in this ticket fails on a bundle size or a startup time.
 
 Repository hygiene
-- [ ] `server/test/ci/workflow.test.ts` is updated to the new order and to expect `test:e2e` and `playwright`; `server/test/scripts/verifySharp.test.ts` still passes.
-- [ ] `.gitignore` contains `.playwright-browsers/` and `ci-logs/`.
-- [ ] `npm run typecheck`, `npm run lint` and `npm test` are green on a developer machine; `playwright.config.ts` is untouched.
+- [ ] `server/test/ci/workflow.test.ts` is updated to the new order and to expect no browser-test step; `server/test/scripts/verifySharp.test.ts` still passes.
+- [ ] `.gitignore` contains `ci-logs/`.
+- [ ] `npm run typecheck`, `npm run lint` and `npm test` are green on a developer machine; no browser-test config file is touched.
 
 ## 6. Tests to write
 
@@ -423,14 +395,14 @@ Import the pure scanners from `../lib/nfr-rules.mjs` and call them with in-memor
 
 ### 6.3 T003 tests to update
 
-- `server/test/ci/workflow.test.ts`: replace `does not run e2e yet` with `runs the e2e leg` (contains `npm run test:e2e` and `playwright install`); change `runs the required steps in order` to the order in §5 (indices strictly increasing: `npm ci`, `check-install-log.mjs`, `verify-sharp.mjs`, `npm run typecheck`, `npm run lint`, `npm run ci:nfr:static`, `npm run build`, `npm run ci:nfr:built`, `npm test`, `npm run ci:nfr:runtime`, `npm run smoke:prod`, `npm run check:bundle`, `npm run test:e2e`); keep matrix, `shell: bash`, install-capture and `does not mask failures` cases; add `keeps the job id verify` and `defines the ci-ok aggregate job`.
+- `server/test/ci/workflow.test.ts`: assert the workflow has no browser-test leg (no browser install step, no browser-test run); change `runs the required steps in order` to the order in §5 (indices strictly increasing: `npm ci`, `check-install-log.mjs`, `verify-sharp.mjs`, `npm run typecheck`, `npm run lint`, `npm run ci:nfr:static`, `npm run build`, `npm run ci:nfr:built`, `npm test`, `npm run ci:nfr:runtime`, `npm run smoke:prod`, `npm run check:bundle`); keep matrix, `shell: bash`, install-capture and `does not mask failures` cases; add `keeps the job id verify` and `defines the ci-ok aggregate job`.
 - `server/test/scripts/verifySharp.test.ts`: unchanged cases keep passing; add nothing that depends on a lockfile edit (the lockfile logic is covered by `sharpLockfile.test.mjs`).
 
 ### 6.4 Manual verification of the workflow (once, recorded in the PR)
 
 1. Push the branch; six `verify` legs plus `ci-ok` appear and are green.
-2. Re-run without changes; the Playwright cache step reports a hit.
-3. On a throwaway commit add `test('ci artifact smoke', async ({ page }) => { await page.goto('/'); expect(1).toBe(2); });` to one e2e spec; all legs go red, each uploads `e2e-<os>-node<n>` with a trace and screenshot, and `ci-ok` is red. Revert.
+2. Re-run without changes; the run is green with no new downloads.
+3. On a throwaway commit break one NFR rule (see §6.5); all legs go red, each uploads `checks-<os>-node<n>` with `ci-logs/`, and `ci-ok` is red. Revert.
 
 ### 6.5 Negative proofs for the NFR gates (throwaway commits, then revert)
 
@@ -450,8 +422,8 @@ Each must turn the named step red; record the observed `FAIL <rule-id>` line in 
 - [ ] `npm run lint` passes with no new errors (including `scripts/ci/**/*.mjs`).
 - [ ] New logic covered by tests; `npm test` green (it includes the `tooling` project).
 - [ ] All six matrix legs and `ci-ok` are green on the PR that introduces this ticket.
-- [ ] The negative proofs in §6.5 were performed at least for loopback bind, `Host` guard, external URL in `index.html`, and the failing-e2e artifact upload, and recorded in the PR description.
-- [ ] The artifact `path:` list matches T038's real `outputDir` and report folder.
+- [ ] The negative proofs in §6.5 were performed at least for loopback bind, `Host` guard, external URL in `index.html`, and the failing-run artifact upload, and recorded in the PR description.
+- [ ] The artifact `path:` lists are the install log and `ci-logs/` only.
 - [ ] The PR description tells the maintainer to mark `ci-ok` as the required status check and lists the six per-leg check names that can be removed from branch protection.
 - [ ] README: no change required by this ticket.
 
@@ -461,8 +433,8 @@ Each must turn the named step red; record the observed `FAIL <rule-id>` line in 
 - **Windows specifics.** Git Bash is used for `run:` steps; spawn `node` via `process.execPath` with an argument array, never through a shell string. `--import` needs a `file://` URL on Windows (`pathToFileURL`). Antivirus locks can make `fs.rm` of the temp fixture throw `EBUSY`/`EPERM`: use `maxRetries: 5, retryDelay: 200` and never let cleanup errors mask the real failure. Windows runners may refuse symlink creation, which is why this ticket's fixture has none.
 - **macOS specifics.** `os.tmpdir()` is under `/var/folders`, a symlink to `/private/var`; `realpath` the fixture root before using it as `SLYDR_ROOT` and before comparing paths. Some runner images have no non-internal IPv4: `R1` must `SKIP`, not fail (the static `S1` rule and the `server.listening` URL check still run).
 - **Linux specifics.** Chromium needs OS libraries; `--with-deps` handles it and needs `sudo`, which `ubuntu-latest` provides. The browser cache does not include them.
-- **Ports.** 4417 (T038), 4517 (T039 smoke), 4617 (this ticket). The scripts parse the real port from the readiness line; they never assume the default.
+- **Ports.** 4517 (T039 smoke), 4617 (this ticket). The scripts parse the real port from the readiness line; they never assume the default.
 - **Browser auto-open.** Start the built server directly, never through `npm start`; `NO_OPEN_ENV` is belt and braces.
-- **Flakiness policy.** Retries exist only in Playwright (T038 config). The check scripts are deterministic and have no retries; a retry would mask a real intermittent bind or header bug.
-- **Cost control.** Six legs; Windows and macOS minutes cost more on private repos. If that matters, restrict the Playwright steps to Node 24 with `if: matrix.node == '24'`; the spec (§12.5) asks for the full matrix, so the default is not to.
-- **Not covered here, by design:** visual regression, Lighthouse, a bundle-size or startup gate, accessibility scanning (T036 and T038's `a11y.e2e.ts`), Firefox/WebKit.
+- **Flakiness policy.** The check scripts are deterministic and have no retries; a retry would mask a real intermittent bind or header bug.
+- **Cost control.** Six legs; Windows and macOS minutes cost more on private repos. The spec (§12.5) asks for the full matrix, so the default keeps all legs.
+- **Not covered here, by design:** visual regression, Lighthouse, a bundle-size or startup gate, accessibility scanning (T036), Firefox/WebKit.

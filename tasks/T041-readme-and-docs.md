@@ -52,6 +52,7 @@ step (`npm run docs:check`), so documentation drift fails the build.
   silently document the wrong behaviour.
 - The CI workflow beyond the single `docs:check` step — owned by **T040**. No CI status badge
   is added (no remote exists yet and the README contains no images).
+- Browser-driven end-to-end tests — out of scope for v1. The Testing section documents unit, API and component tests only.
 - Screenshots or animated GIFs. They would have to be produced and maintained by hand; the
   spec does not ask for them. Leave no image placeholders.
 - A `docs/` directory, a CONTRIBUTING guide, a CHANGELOG, a LICENSE file or any translation.
@@ -67,7 +68,7 @@ The repository is **not** empty. The following exists:
 
 - npm workspaces monorepo: `shared/` (`@slydr/shared`), `server/` (`@slydr/server`, Express 5),
   `client/` (`@slydr/client`, Vite 7 + React 19). TypeScript 5.x, ESM, `engines.node >= 22`.
-- Root scripts (specification §13.1): `dev`, `build`, `start`, `test`, `test:e2e`, `lint`,
+- Root scripts (specification §13.1): `dev`, `build`, `start`, `test`, `lint`,
   `format`, `typecheck`. `npm start` runs the built server, serves `client/dist` on the same
   origin, prints `http://127.0.0.1:<port>` and opens the default browser (**T039**).
   `npm run dev` runs `tsx watch` on the server (port 4317) and Vite (port 5173) together with
@@ -440,7 +441,6 @@ Requirements: Node.js 22 or newer and npm. Install with `npm ci` from the reposi
 | `npm run build` | Type-checks, builds `shared`, builds the client into `client/dist` and compiles the server into `server/dist` |
 | `npm start` | Runs the built server, which serves `client/dist` and `/api` from one origin, prints the address and opens the browser |
 | `npm test` | Unit, API and component tests (Vitest) |
-| `npm run test:e2e` | End-to-end tests (Playwright, Chromium), including an automated accessibility scan; needs `npm run build` first |
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier (writes changes) |
 | `npm run typecheck` | `tsc --noEmit` across all workspaces |
@@ -468,16 +468,13 @@ All colours, spacing, type sizes, durations and breakpoints are design tokens in
 
 ```bash
 npm test                              # unit, API, component and tooling tests
-npx playwright install chromium       # once, to download the browser for end-to-end tests
-npm run build                         # end-to-end tests run against the built app
-npm run test:e2e                      # end-to-end tests
 ```
 
-The end-to-end tests run against a generated tree of tiny images, folders, a hidden folder, a
+Unit, API and component tests run against a generated tree of tiny images, folders, a hidden folder, a
 non-image file and, where the platform allows it, a broken symbolic link; nothing binary is
 committed. Create the same tree yourself with `npm run fixtures -- ./.fixtures/tree`; it
 prints the folder to use as the test-only `SLYDR_ROOT` (see below). A GitHub Actions workflow
-runs install, type-check, lint, the build, the tests, the end-to-end tests (Chromium) and this
+runs install, type-check, lint, the build, the tests and this
 README check on Windows, macOS and Linux with Node 22 and Node 24.
 
 ### Test-only variable: SLYDR_ROOT
@@ -602,7 +599,7 @@ All in `scripts/docs/test/readme.test.mjs`, a Vitest file (`describe`, `it`, `ex
 `validReadme()` returning a minimal string that satisfies every rule — headings, one table row
 per env var, the three cache paths, etc.) and derive each negative case by replacing one
 fragment of it. Also a `validInput(overrides)` helper supplying
-`packageJson = { scripts: { dev, build, start, test, 'test:e2e', lint, format, typecheck, fixtures, 'check:bundle', 'smoke:prod', 'docs:check' }, engines: { node: '>=22' } }`,
+`packageJson = { scripts: { dev, build, start, test, lint, format, typecheck, fixtures, 'check:bundle', 'smoke:prod', 'docs:check' }, engines: { node: '>=22' } }`,
 `imageExtensionsSource` containing the nine extensions in a `new Set([...])`, and
 `fileExists = rel => ['specification.md', 'tasks/README.md'].includes(rel)`.
 
@@ -614,7 +611,7 @@ fragment of it. Also a `validInput(overrides)` helper supplying
 | `D1 reports a second H1` | Adding `# Other` -> finding. |
 | `splitSections ignores headings inside code fences` | A `## Not a heading` line inside a fenced block is not returned. |
 | `D2 flags an unknown npm script` | README mentions `npm run deploy` -> finding naming `deploy`. |
-| `D2 ignores npm ci and npx` | Fixture containing `npm ci` and `npx playwright install chromium` -> no D2 finding. |
+| `D2 ignores npm ci and npx` | Fixture containing `npm ci` and `npx tsc --noEmit` -> no D2 finding. |
 | `D2 requires start and test scripts` | `packageJson.scripts` without `start` while README says `npm start` -> finding. |
 | `D3 flags a missing env var or wrong default` | Removing the `SLYDR_QUIET` row -> finding; removing the `SLYDR_NO_OPEN` row -> finding; changing `4317` to `3000` in the `PORT` row -> finding. |
 | `D4 flags SLYDR_ROOT in the quick start` | Adding the name to `Install and run` -> `D4-slydr-root-test-only`. |

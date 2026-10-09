@@ -142,7 +142,7 @@ export function isContained(real: string, root: string): boolean; // pure step 7
 export function mapFsError(err: unknown): ApiError;
 ```
 
-`resolveSafe` implements specification §3.3 end to end: it rejects NUL bytes and inputs
+`resolveSafe` implements specification §3.3 fully: it rejects NUL bytes and inputs
 longer than 4096 characters (`400 INVALID_PATH`), rejects a leading `/` and Windows
 absolute/UNC shapes (`400 INVALID_PATH`; any backslash too, on Windows only), rejects any
 `..` segment (`403 OUTSIDE_ROOT`), joins the surviving segments onto the jail root,

@@ -35,6 +35,7 @@ Each component is styled with CSS Modules using design tokens only (no literal c
 - The explorer's entry rows, tiles and virtualised list — E11 to E13.
 - Data fetching, state providers and persistence — E10.
 - A modal or dialog primitive. The breadcrumb overflow menu is a small popup local to `Breadcrumb`; no general-purpose `Menu` or `Popover` component is built here.
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 
@@ -711,7 +712,7 @@ Per specification §12.3 (component tests with React Testing Library) and NFR-6.
 ### `Slider.test.tsx`
 
 18. `renders range input, label and an output with formatted value` — value 5 with `formatValue={(v) => `${v} s`}` and `formatValueText={(v) => `${v} seconds`}` shows "5 s" in the `output` (which has `aria-live="off"`) and `aria-valuetext="5 seconds"`; without `formatValueText` the `aria-valuetext` is "5 s".
-19. `change events map to onValueChange with a number` — `jsdom` does not implement native arrow-key stepping on range inputs, and production code must not gain test-only branches. Simulate the browser's result with `fireEvent.change(input, { target: { value: '6' } })` and assert `onValueChange(6)` (a number, not the string). Native arrow stepping is the browser's job and is covered by the manual and end-to-end checks.
+19. `change events map to onValueChange with a number` — `jsdom` does not implement native arrow-key stepping on range inputs, and production code must not gain test-only branches. Simulate the browser's result with `fireEvent.change(input, { target: { value: '6' } })` and assert `onValueChange(6)` (a number, not the string). Native arrow stepping is the browser's job and is covered by manual checks.
 20. `PageUp adds 5 and PageDown subtracts 5` — with value 5, `fireEvent.keyDown(input, { key: 'PageUp' })` produces `onValueChange(10)`; with value 3 (min 1), `{ key: 'PageDown' }` produces `onValueChange(1)` (clamped to `min`). In both cases `fireEvent.keyDown` returns `false`, proving `preventDefault` was called.
 21. `PageUp clamps at max and does not call onValueChange when already at max`.
 22. `ignores PageUp when a modifier is held` (`ctrlKey: true`).

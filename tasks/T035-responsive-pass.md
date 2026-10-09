@@ -32,7 +32,7 @@ This ticket is the **verification and finishing pass** over that work. It does n
 - Re-implementing anything listed in §3 (the table). If a check fails, fix it in the file the owning ticket created, mention the ticket in the PR, and keep the change minimal.
 - Contrast, ARIA, live regions, focus order, titles, headings, landmarks, forced colours — **T036**. The `prefers-reduced-motion` player override — **T032**.
 - Any API, `localStorage` key, selection, playlist, timing, shuffle, loop or fullscreen change.
-- Virtualization behaviour — **T028**. Playwright config and specs — **T038** (its `responsive.e2e.ts` covers 320 px and 1920 px in a real browser).
+- Virtualization behaviour — **T028**. End-to-end (e2e) testing is out of scope; 320 px and 1920 px are verified manually in a real browser.
 - Touch swipe navigation (excluded from v1, spec §10 and §16.2 item 4).
 - Caps on grid width at 4K: T027 states there is no fourth grid step; `auto-fill` simply adds columns. If the 3840 × 2160 sweep looks wrong, raise it as a product question in the PR, do not add a `max-width` here.
 
@@ -54,7 +54,7 @@ The repository is not empty. What each earlier ticket already delivers for §10,
 | Breadcrumb collapse | T022 | `Breadcrumb` with measurement-driven collapse (Home + last two always visible) and, new in this revision, `maxVisibleSegments?: number` (last `m` segments plus an ellipsis menu that lists Home first) |
 | Test helper | T021 | `client/test/helpers/matchMedia.ts` exporting `installMatchMedia(initial?)` returning `{ setMatches, listenerCount, dispose }` |
 
-Server surface and tooling are unchanged: Vitest (jsdom for `client`), React Testing Library, `jsx-a11y`, Playwright installed (specs are T038's).
+Server surface and tooling are unchanged: Vitest (jsdom for `client`), React Testing Library, `jsx-a11y`.
 
 ## 4. Implementation detail
 
@@ -166,7 +166,7 @@ export function installViewport(opts: ViewportOptions): MatchMediaController & {
 - [ ] The configuration column is full width with ≥ 16 px gutters below 768 px and `max-width: 35rem` (560 px) centred from 768 px.
 - [ ] The player pill has 48 px buttons and no counter below 768 px, 44 px (48 px coarse) from 768 px, all five buttons present, and fits inside `100% - 2 * 16px` at 320 px.
 - [ ] A tap anywhere in the player reveals the controls and does not change the slide or the pause state (T033 behaviour, re-verified); `Player.tsx` carries the swipe comment from §4.4; no swipe/`touchmove` handler exists in `client/src`.
-- [ ] `document.documentElement.scrollWidth <= clientWidth` at each of 320 × 568, 768 × 1024, 1366 × 768, 1920 × 1080 and 3840 × 2160 on all three screens, in both themes (manual checklist; T038 automates 320 px and 1920 px).
+- [ ] `document.documentElement.scrollWidth <= clientWidth` at each of 320 × 568, 768 × 1024, 1366 × 768, 1920 × 1080 and 3840 × 2160 on all three screens, in both themes (manual checklist in a real browser).
 - [ ] No second `matchMedia` stub exists; `installViewport` extends T021's helper.
 - [ ] The completed §6.3 checklist is pasted into the pull request description.
 
@@ -233,7 +233,7 @@ Run in a real browser, Chrome DevTools device toolbar is enough (for 3840 × 216
 
 ## 8. Notes and gotchas
 
-- **jsdom has no layout.** `getComputedStyle` does not resolve CSS Modules, does not apply `@media`, and reports zero `scrollWidth`. That is why the checks are CSS-source tripwires plus a manual sweep; "no horizontal scroll" is proven in a real browser (manual here, T038 for 320/1920 px). Do not write tests that assert computed layout.
+- **jsdom has no layout.** `getComputedStyle` does not resolve CSS Modules, does not apply `@media`, and reports zero `scrollWidth`. That is why the checks are CSS-source tripwires plus a manual sweep; "no horizontal scroll" is proven in a real browser (manual sweep here). Do not write tests that assert computed layout.
 - **`minmax(0, 1fr)`, not `1fr`.** A `1fr` track has an implicit `min-content` minimum; a long unbreakable file name expands it and overflows the page. If a horizontal scrollbar appears, check this first.
 - **`overflow-x: clip`, not `hidden`.** T020 uses `clip` on `body` only so sticky descendants keep sticking. Never "fix" overflow by adding `overflow-x: hidden` to `html`/`body`.
 - **Scrollbar width differs by platform.** Windows and most Linux desktops reserve layout width for a scrollbar; macOS overlays it. Always run the 320 px case on Windows (the dev machine) and rely on `scrollbar-gutter: stable`, not magic numbers.

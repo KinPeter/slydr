@@ -17,8 +17,8 @@ a **prebuilt binary** with no C/C++ compiler toolchain on any leg of the matrix 
 the general rule: no dependency may require a compiler at install time).
 
 This ticket adds that workflow as a skeleton: install, a hard verification that no compiler
-was involved, then typecheck, lint, unit/API/component tests and build. The Playwright
-end-to-end leg is added later by T040. The ticket also adds two small helper scripts that
+was involved, then typecheck, lint, unit/API/component tests and build.
+End-to-end (e2e) testing is out of scope; the workflow has no browser-testing step. The ticket also adds two small helper scripts that
 perform the verification, and tests for them, so the release-blocker check is itself tested.
 
 ## 2. Scope
@@ -36,13 +36,13 @@ perform the verification, and tests for them, so the release-blocker check is it
 
 ### Out of scope
 
-- The Playwright end-to-end leg: browser installation, the `test:e2e` step and any e2e job —
-  **T040** (the suite itself is T038). Do **not** add an e2e step here, not even a disabled or
+- End-to-end (e2e) testing is out of scope. Do **not** add a browser-installation step or
+  any additional test job here, not even a disabled or
   `continue-on-error` one.
 - Release or publishing automation, Dependabot, CodeQL, caching of build output, coverage
   upload, and status-badge README edits (README is epic E25).
 - A `format:check` step. *Decision (not specified):* §12.5 lists exactly install, typecheck,
-  lint, tests, build and e2e. Formatting is enforced locally by `npm run format:check` and is
+  lint, tests and build. Formatting is enforced locally by `npm run format:check` and is
   not a CI gate in this ticket.
 - Intel macOS runners. `macos-latest` is Apple Silicon (`darwin-arm64`). The specification's
   prebuilt-binary list also names `darwin-x64`; covering it is a follow-up if a runner label
@@ -62,7 +62,6 @@ T001 and T002 are complete and committed. Facts this ticket relies on:
   | `npm run lint` | `eslint .` |
   | `npm test` | builds `@slydr/shared`, then `vitest run` over projects `shared`, `server` (node) and `client` (jsdom) |
   | `npm run build` | `npm run typecheck`, then builds `shared`, `server` and (only if it defines `build`) `client` |
-  | `npm run test:e2e` | still the failing stub from T001 (implemented by T038; wired into CI by T040); CI must not call it in this ticket |
 
 - `package-lock.json` is committed at the repo root. `.nvmrc` contains `22`. Line endings are
   forced to LF by `.gitattributes`.
@@ -371,7 +370,7 @@ level:
 |---|---|---|
 | `client` has no `build` script until the client-shell tickets (epic E9) add Vite | root `build` uses `npm run build -w @slydr/client --if-present` (T001) | The ticket that adds the client's `build` script removes `--if-present` from that one command in root `package.json`, so a missing client build becomes a CI failure. |
 | Few real tests exist: `npm test` runs only the toolchain smoke tests from T002 | Not tolerated; the suite simply is small | Nothing to tighten; each later ticket adds tests and CI picks them up automatically because Vitest's `projects` globs include `test/**`. |
-| End-to-end tests | The workflow has **no** e2e step at all | **T040** wires in the e2e run (T038 implements `test:e2e`). It adds, after `Build`, steps to install Playwright browsers (`npx playwright install --with-deps chromium` on Linux, `npx playwright install chromium` elsewhere) and `npm run test:e2e`, moves `Build` before `Test`, extends `scripts/verify-sharp.mjs` with the lockfile platform check, and updates `server/test/ci/workflow.test.ts`. It keeps the job id `verify` and must not weaken any step here. |
+| Browser-based testing | The workflow has **no** browser-testing step at all. No step installs browsers and no additional test job exists. |
 | `start`, `dev` | Not run by CI | Out of CI scope. |
 
 If a later ticket adds a new root script that should gate merges (for example `format:check`),
@@ -419,7 +418,7 @@ npm run typecheck && npm run lint && npm test && npm run build
       2>&1 | tee install.log`, install-log check, sharp check, `npm run typecheck`,
       `npm run lint`, `npm test`, `npm run build`, upload-log-on-failure.
 - [ ] The workflow contains no `continue-on-error`, no `|| true`, no `--if-present`, no
-      `npm install`, and no reference to `test:e2e` or `playwright`.
+      `npm install`, and no browser-testing step.
 - [ ] `node scripts/check-install-log.mjs <file>` exits `0` for a log with no forbidden text,
       `1` for a log containing `gyp ERR! find Python`, `1` for a log containing
       `> node-gyp rebuild`, and `2` for a missing or empty file.
@@ -427,7 +426,7 @@ npm run typecheck && npm run lint && npm test && npm run build
       starting `[slydr] OK: sharp`.
 - [ ] `node scripts/verify-sharp.mjs` exits `1` when `node_modules/sharp/build` exists
       (temporarily `mkdir node_modules/sharp/build` to confirm, then remove it).
-- [ ] The local dry run in §4.6 passes end to end on Windows.
+- [ ] The local dry run in §4.6 passes fully on Windows.
 - [ ] `git check-ignore install.log` prints `install.log`.
 - [ ] After the repository is pushed to GitHub, the workflow shows six passing jobs. If no
       remote exists yet, record in the hand-off message that this criterion is pending the
@@ -481,10 +480,9 @@ checks only (no new YAML dependency). Reads `.github/workflows/ci.yml` as UTF-8.
   `verify-sharp.mjs`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` in the
   file text are strictly increasing.
 - `does not mask failures` — does not contain `continue-on-error`, `|| true` or `--if-present`.
-- `does not run e2e yet` — does not contain `test:e2e` or `playwright` (case-insensitive);
-  the comment in the test names T040 as the ticket that must update this assertion (and the
-  step-order, `build`-before-`test`, `smoke:prod` and `docs:check` expectations) when it
-  completes the workflow.
+- `has no browser-testing step` — asserts the workflow contains no browser-install or
+  browser-run step; the comment in the test names the ticket that must update this
+  assertion (and the step-order expectations) when the workflow is extended.
 - `captures the install output` — contains `npm ci --foreground-scripts` and `tee install.log`.
 
 ## 7. Definition of done

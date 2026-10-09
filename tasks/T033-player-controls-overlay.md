@@ -30,6 +30,7 @@ Once the slide show is running, the user needs a way to go back, go forward, pau
 - Contrast measurements, live regions and the accessibility audit — T036.
 - Swipe gestures. They are deliberately not bound in v1.
 - Any error screen for a failed player. There is none: when every image fails, the engine exits to the configuration screen with a notice (T030, T029).
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 

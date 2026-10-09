@@ -53,6 +53,7 @@ verbatim and covers them with the full test matrix of §12.1.
   thumbnails (`/api/thumb`) — later tickets in epics E6–E8. They all consume `resolveSafe`.
 - The repository-wide fixture-tree generator script — **T037**. This ticket builds its own
   temporary fixtures inline with `fs.mkdtemp`.
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 
@@ -207,7 +208,7 @@ each block.
 
    Note the deliberate asymmetry: `..` is `403 OUTSIDE_ROOT` (an escape *attempt*), while a
    malformed or absolute input is `400 INVALID_PATH`. Preserve it — the test matrix and the
-   §12.4 e2e security test both assert on `OUTSIDE_ROOT` for a traversal.
+   §12.4 API/supertest security test both assert on `OUTSIDE_ROOT` for a traversal (end-to-end testing is out of scope).
    Do **not** try to be clever and allow `..` that happens to stay inside the root. A
    blanket rejection is auditable; a net-depth calculation is not, and the client never
    needs `..` because it always holds a full wire path.

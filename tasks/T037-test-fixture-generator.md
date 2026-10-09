@@ -9,9 +9,9 @@
 
 ## 1. Context
 
-Slydr's API tests (spec §12.2) and end-to-end tests (spec §12.4) all need a realistic directory tree to run against: images in several formats, a deeply nested hierarchy, hidden entries, Windows-style hidden names, a corrupt image, symlinks that stay inside the jail and symlinks that try to escape it. The specification requires that this tree be produced by a script at test time rather than committed as binaries, so that it behaves identically on Windows, macOS and Linux CI (committed symlinks and files named `$RECYCLE.BIN` or `Thumbs.db` do not survive a Windows checkout or an archive round trip reliably).
+Slydr's API tests (spec §12.2) and component tests all need a realistic directory tree to run against: images in several formats, a deeply nested hierarchy, hidden entries, Windows-style hidden names, a corrupt image, symlinks that stay inside the jail and symlinks that try to escape it. The specification requires that this tree be produced by a script at test time rather than committed as binaries, so that it behaves identically on Windows, macOS and Linux CI (committed symlinks and files named `$RECYCLE.BIN` or `Thumbs.db` do not survive a Windows checkout or an archive round trip reliably).
 
-This ticket builds that generator: an importable ES module `scripts/fixtures.mjs` exporting `createFixtureTree(rootDir, opts)` which returns a **manifest** describing every path it created, and a thin CLI `scripts/make-fixtures.mjs` wrapping it. Tests then assert against the manifest (names, types, hidden flags, expected sort order) instead of hard-coded strings, so adding a fixture file later changes one place only. The generator is consumed by the later server API, scan and listing suites and by the Playwright suite (T038); T004 is a dependency because the declaration file imports `EntryType` from `@slydr/shared`.
+This ticket builds that generator: an importable ES module `scripts/fixtures.mjs` exporting `createFixtureTree(rootDir, opts)` which returns a **manifest** describing every path it created, and a thin CLI `scripts/make-fixtures.mjs` wrapping it. Tests then assert against the manifest (names, types, hidden flags, expected sort order) instead of hard-coded strings, so adding a fixture file later changes one place only. The generator is consumed by the later server API, scan and listing suites; T004 is a dependency because the declaration file imports `EntryType` from `@slydr/shared`.
 
 ## 2. Scope
 
@@ -26,19 +26,19 @@ This ticket builds that generator: an importable ES module `scripts/fixtures.mjs
 - Fixed modification times via `fs.utimes` so ETag and thumbnail cache-key assertions are stable.
 - Platform-aware symlink creation that detects failure, skips, and records the skip in `manifest.skipped`.
 - A Vitest test for the generator itself.
-- Documentation, inside this ticket and in the module's header comment, of how server tests mount the tree (through `setJailRoot` and the shared test helpers) and how the Playwright launcher mounts it (through `SLYDR_ROOT`).
+- Documentation, inside this ticket and in the module's header comment, of how server tests mount the tree (through `setJailRoot` and the shared test helpers).
 - The root Vitest `tooling` project that runs this ticket's test and the other tooling tests (§4.1).
 
 ### Out of scope
 
-- The Playwright config, `globalSetup` and scenarios that consume the tree — **T038**.
+- Browser-driven end-to-end scenarios that might consume the tree — out of scope for v1.
 - The server suites (listing, scan, jail, thumbnails, API) that consume the tree — the respective server tickets; they import this module but are not written here.
-- Committing any binary fixture. Nothing under `scripts/` or `e2e/` may contain a checked-in image.
+- Committing any binary fixture. Nothing under `scripts/` may contain a checked-in image.
 - Cache-dir handling (`SLYDR_CACHE_DIR`) — the consumers create their own temp cache directories.
 
 ## 3. Prerequisites and assumed state
 
-The repository is the npm workspaces monorepo from **T001** plus the shared types from **T004** (`EntryType` in `@slydr/shared`): root `package.json` with `"workspaces": ["shared", "server", "client"]`, `"type": "module"`, `"engines": { "node": ">=22" }`; `tsconfig.base.json` (TypeScript 5.x strict); ESLint 9 flat config and Prettier at the root; Vitest (node environment for `shared` and `server`, jsdom for `client`); Supertest; `@playwright/test`; the GitHub Actions skeleton at `.github/workflows/ci.yml` running `{windows,macos,ubuntu}-latest` × Node `{22,24}` (install, typecheck, lint, tests, build). Everything is ESM. The Playwright CI leg is not wired yet (T040).
+The repository is the npm workspaces monorepo from **T001** plus the shared types from **T004** (`EntryType` in `@slydr/shared`): root `package.json` with `"workspaces": ["shared", "server", "client"]`, `"type": "module"`, `"engines": { "node": ">=22" }`; `tsconfig.base.json` (TypeScript 5.x strict); ESLint 9 flat config and Prettier at the root; Vitest (node environment for `shared` and `server`, jsdom for `client`); Supertest; the GitHub Actions skeleton at `.github/workflows/ci.yml` running `{windows,macos,ubuntu}-latest` × Node `{22,24}` (install, typecheck, lint, tests, build). Everything is ESM.
 
 `sharp` (`~0.34`) is a dependency of the `server` workspace and ships prebuilt binaries on all three platforms. The server contract the fixtures exist to exercise:
 
@@ -75,7 +75,7 @@ Root `package.json` additions:
 }
 ```
 
-**`typecheck` is appended to, never restated.** T002's root `typecheck` (it builds `@slydr/shared`, runs `tsc -p tsconfig.json --noEmit`, then each workspace's `typecheck`) stays exactly as it is, and this ticket appends ` && tsc --noEmit -p scripts/tsconfig.json` to the end of the existing value. Restating the chain would drop the shared build and break type-checking on a clean checkout. T038 appends its own `&& tsc --noEmit -p e2e/tsconfig.json` the same way.
+**`typecheck` is appended to, never restated.** T002's root `typecheck` (it builds `@slydr/shared`, runs `tsc -p tsconfig.json --noEmit`, then each workspace's `typecheck`) stays exactly as it is, and this ticket appends ` && tsc --noEmit -p scripts/tsconfig.json` to the end of the existing value. Restating the chain would drop the shared build and break type-checking on a clean checkout.
 
 **The `tooling` Vitest project (created here).** T002's root `vitest.config.ts` uses `projects: ['shared', 'server', 'client']`. Add a fourth, inline project so tests outside the workspaces run under `npm test` with one runner:
 
@@ -84,12 +84,12 @@ Root `package.json` additions:
   test: {
     name: 'tooling',
     environment: 'node',
-    include: ['scripts/**/*.test.{ts,mjs}', 'e2e/support/**/*.test.ts'],
+    include: ['scripts/**/*.test.{ts,mjs}'],
   },
 }
 ```
 
-Later tickets (T038, T040, T041) add their tests under those globs and write them with `describe/it/expect` imported from `'vitest'`; none uses `node:test`.
+Later tickets (T040, T041) add their tests under that glob and write them with `describe/it/expect` imported from `'vitest'`; none uses `node:test`.
 
 Usage: `npm run fixtures -- ./.fixtures/tree --large`. The `--` separator is npm syntax and works identically in cmd, PowerShell, bash and zsh. Add `.fixtures/` to `.gitignore`.
 
@@ -227,7 +227,7 @@ Generated under `<rootDir>`; paths below are wire paths. "N" counts are exact so
 | SVG | Plain text template | It is XML. |
 | JPEG, WebP, AVIF | `sharp({ create })` | Hand-encoding DCT/VP8/AV1 is impractical; constants would give only one colour/size. `sharp` is already a project dependency with prebuilt binaries, so this adds no install-time risk. |
 
-Sample colours (RGB), distinct so e2e can tell images apart by pixel as well as by `src`: `IMG_1.jpg` red `255,0,0`; `IMG_2.jpg` green `0,200,0`; `IMG_10.jpg` blue `0,0,255`; `sample.png` yellow `255,220,0`; `sample.gif` magenta `255,0,255`; `sample.webp` cyan `0,200,255`; `sample.avif` orange `255,128,0`; `sample.bmp` purple `128,0,160`; `sample.svg` teal `0,128,128`; `UPPER.JPG` white-grey `200,200,200`. Raster samples are **64 x 48** (landscape) except `sample.gif` (1 x 1); solid colour means the `fit: 'cover'` square crop of the thumbnail pipeline does not change the colour, so a colour assertion on a thumbnail remains valid. `sharp` image creation must use `channels: 3` and `background: { r, g, b }`.
+Sample colours (RGB), distinct so consumers can tell images apart by pixel as well as by `src`: `IMG_1.jpg` red `255,0,0`; `IMG_2.jpg` green `0,200,0`; `IMG_10.jpg` blue `0,0,255`; `sample.png` yellow `255,220,0`; `sample.gif` magenta `255,0,255`; `sample.webp` cyan `0,200,255`; `sample.avif` orange `255,128,0`; `sample.bmp` purple `128,0,160`; `sample.svg` teal `0,128,128`; `UPPER.JPG` white-grey `200,200,200`. Raster samples are **64 x 48** (landscape) except `sample.gif` (1 x 1); solid colour means the `fit: 'cover'` square crop of the thumbnail pipeline does not change the colour, so a colour assertion on a thumbnail remains valid. `sharp` image creation must use `channels: 3` and `background: { r, g, b }`.
 
 PNG encoder (use verbatim, name the helper `encodePng`):
 
@@ -305,7 +305,7 @@ await solid(64, 48, rgb).webp({ quality: 80 }).toBuffer();
 await solid(64, 48, rgb).avif({ quality: 50, effort: 0 }).toBuffer();
 ```
 
-AVIF encoding is the slowest and the one most likely to be unsupported by a given `sharp` build. When the stub is written, `photos/sample.avif` is classified `image` by extension but a browser cannot decode it; consumers that play `photos/` (T038) therefore exclude paths listed in `manifest.skipped` with code `AVIF_STUB` when computing the playlist they expect. If it throws, **do not fail the generator**: write the file with the fixed 12 bytes `00 00 00 0c 66 74 79 70 61 76 69 66` ("ftypavif" box stub) instead and add `{ path: 'photos/sample.avif', reason: 'sharp could not encode AVIF; wrote a stub', code: 'AVIF_STUB' }` to `skipped`. Classification only depends on the extension; the e2e thumbnail test uses the explicitly listed JPEG/PNG/WebP items. Corrupt and heic files:
+AVIF encoding is the slowest and the one most likely to be unsupported by a given `sharp` build. When the stub is written, `photos/sample.avif` is classified `image` by extension but a browser cannot decode it; consumers that play `photos/` therefore exclude paths listed in `manifest.skipped` with code `AVIF_STUB` when computing the playlist they expect. If it throws, **do not fail the generator**: write the file with the fixed 12 bytes `00 00 00 0c 66 74 79 70 61 76 69 66` ("ftypavif" box stub) instead and add `{ path: 'photos/sample.avif', reason: 'sharp could not encode AVIF; wrote a stub', code: 'AVIF_STUB' }` to `skipped`. Classification only depends on the extension; the thumbnail test uses the explicitly listed JPEG/PNG/WebP items. Corrupt and heic files:
 
 - `corrupt.jpg`: a fixed 64-byte buffer, e.g. `Buffer.from('this is not a jpeg '.repeat(4).slice(0, 64))`. Fixed bytes keep the fixture deterministic.
 - `empty.png`: `Buffer.alloc(0)`.
@@ -371,7 +371,7 @@ node scripts/make-fixtures.mjs <dir> [--large] [--scan-heavy] [--no-symlinks] [-
 4. With `--manifest <file>`, write `JSON.stringify(manifest, null, 2)` to that file (UTF-8, `\n` line endings).
 5. Exit `0` on success even when symlinks were skipped (skipping is expected on unprivileged Windows); exit `1` with a one-line message on any thrown error, including the refusal to wipe an unmarked directory.
 
-The module must not execute anything at import time (the CLI file is the only entry point), and must work when imported from a Vitest worker, a Playwright `globalSetup` and a plain `node` process.
+The module must not execute anything at import time (the CLI file is the only entry point), and must work when imported from a Vitest worker and a plain `node` process.
 
 ### 4.9 Mounting the tree in server tests
 
@@ -401,7 +401,7 @@ export async function mountFixtures(opts = {}) {
 
 No module-cache tricks are needed because the jail root is set by a function call, not read from the environment at import time. Match the real helper names in `server/test/helpers/` if they differ slightly.
 
-**`SLYDR_ROOT` is used in exactly one place:** the Playwright launcher (T038), which starts the real production server in its own process and therefore has no other way to set the jail root. It is test-only (spec §3.1) and is never documented as a user feature. The generator's own test does not involve the server.
+`SLYDR_ROOT` is test-only (spec §3.1) and is never documented as a user feature. No in-scope suite consumes it. The generator's own test does not involve the server.
 
 ## 5. Acceptance criteria
 
@@ -419,7 +419,7 @@ No module-cache tricks are needed because the jail root is set by a function cal
 - [ ] `--large` creates `large-2000`, `large-10000`, `large-10001` with the exact file counts; `--scan-heavy` creates 21,000 files under `scan-heavy/`.
 - [ ] `expectedListing(manifest, '', false)` returns folders first, collator-ordered, with hidden and Windows-only-hidden entries filtered according to `process.platform`, and `IMG_2.jpg` before `IMG_10.jpg` in `photos`.
 - [ ] `npm run typecheck` still contains T002's original chain and additionally runs `tsc --noEmit -p scripts/tsconfig.json`, and passes; the root Vitest config has a `tooling` project and `npm test` runs `scripts/fixtures.test.ts` in it.
-- [ ] The server-test example in §4.9 uses `setJailRoot` and the shared test helpers; `SLYDR_ROOT` appears only in the Playwright launcher context.
+- [ ] The server-test example in §4.9 uses `setJailRoot` and the shared test helpers.
 - [ ] `.fixtures/` is git-ignored and no binary file was added to the repository.
 
 ## 6. Tests to write
@@ -471,7 +471,7 @@ The large cases are skipped by default (`it.skipIf(!process.env.SLYDR_TEST_LARGE
 - [ ] Run `npm run fixtures -- ./.fixtures/tree --large` once manually on the dev machine; record the elapsed time and skipped list in the pull request.
 - [ ] `sharp` added to root `devDependencies`; `npm ls sharp` shows a single deduped version.
 - [ ] `.gitignore` contains `.fixtures/`.
-- [ ] README: no change here; T041 creates the README and its Development section must document `npm run fixtures`, its flags, the `setJailRoot` mounting pattern for server tests, and that `SLYDR_ROOT` is test-only (used only by the Playwright launcher).
+- [ ] README: no change here; T041 creates the README and its Development section must document `npm run fixtures`, its flags, the `setJailRoot` mounting pattern for server tests, and that `SLYDR_ROOT` is test-only.
 
 ## 8. Notes and gotchas
 

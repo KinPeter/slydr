@@ -25,7 +25,7 @@ Slydr is a three-screen single-page application (file explorer, slide-show confi
 ### Out of scope
 
 - Breakpoints, touch-target sizing and layout reflow — T035. This ticket checks 200 % zoom and 320 px reflow for accessibility defects only.
-- Playwright configuration and every e2e spec, including the axe scan in a real browser (`e2e/tests/a11y.e2e.ts`, owned by **T038**, which adds `@axe-core/playwright` as a root devDependency). This ticket adds no e2e file and no CI step.
+- Browser-based testing is out of scope for v1 (so no browser axe scan exists). This ticket adds no browser test file and no CI step.
 - A contrast CLI script, `check:contrast`, and any change to `.github/workflows/` — contrast runs inside `npm test` through T020's test.
 - Screen-reader evidence (NVDA/VoiceOver sessions): not required. The accessibility tree is exercised by `vitest-axe` and by Testing Library role queries; names, roles and values must be correct, which is what screen readers consume.
 - A player-side "failed" screen. There is none: when every image fails the player exits to the configuration screen, where T029 renders the message in a `Banner` (already `role="alert"`).
@@ -36,7 +36,7 @@ Slydr is a three-screen single-page application (file explorer, slide-show confi
 
 All screens exist: explorer (T026 list, T027 grid, T028 virtualization, with image-count chip and error banner), configuration (T029), player (T030 to T034). Tokens are in `client/src/styles/tokens.css` (light baseline on `:root`, dark in both `@media (prefers-color-scheme: dark) :root:not([data-theme='light'])` and `:root[data-theme='dark']`) and include `--overlay-fg` and `--overlay-fg-muted`; `base.css` defines the global `:focus-visible` ring from `--focus-ring` and the `.sr-only` utility. Test tools: Vitest, React Testing Library (jsdom), `client/test/helpers/matchMedia.ts` (T021, extended by T035). `eslint-plugin-jsx-a11y` is already enabled by T019.
 
-**The names every screen must expose (single contract, quoted by T026, T029, T033, T035, T036, T038):**
+**The names every screen must expose (single contract, quoted by T026, T029, T033, T035, T036):**
 
 | Screen | Control / region | Accessible name |
 |---|---|---|
@@ -137,7 +137,7 @@ Within a screen: navigating into a folder or up keeps focus on the listbox/grid 
 npm install -D vitest-axe axe-core --workspace client
 ```
 
-In `client/test/setup.ts` register `expect.extend(axeMatchers)` (`import * as axeMatchers from 'vitest-axe/matchers'`) and add `client/test/helpers/axe.ts` exporting `checkA11y(container)`, which runs `axe(container, { rules: { 'color-contrast': { enabled: false } } })` — jsdom has no layout or computed colours, so contrast is covered by T020's test (§4.1) and, in a real browser, by T038's axe e2e. `client/test/a11y/*.a11y.test.tsx` renders each screen state and asserts `toHaveNoViolations()`: explorer (list, grid, error banner, empty folder, 1000-entry virtualized list), configuration (idle, scanning, zero images, reduced-motion note shown, player notice shown), player (playing, paused, overlay hidden).
+In `client/test/setup.ts` register `expect.extend(axeMatchers)` (`import * as axeMatchers from 'vitest-axe/matchers'`) and add `client/test/helpers/axe.ts` exporting `checkA11y(container)`, which runs `axe(container, { rules: { 'color-contrast': { enabled: false } } })` — jsdom has no layout or computed colours, so contrast is covered by T020's test (§4.1) and, in a real browser, by the manual check in §4.11. `client/test/a11y/*.a11y.test.tsx` renders each screen state and asserts `toHaveNoViolations()`: explorer (list, grid, error banner, empty folder, 1000-entry virtualized list), configuration (idle, scanning, zero images, reduced-motion note shown, player notice shown), player (playing, paused, overlay hidden).
 
 ### 4.11 Manual check (record in the PR)
 
@@ -201,7 +201,7 @@ Quality strategy: specification §12.3. All tests under `client/test/`, importin
 ## 8. Notes and gotchas
 
 - **Accessibility note for T041:** all three screens are fully keyboard operable; the explorer list is one tab stop navigated with the arrow keys; the player honours the OS reduced-motion setting (the configuration checkbox keeps its stored value); the first `Escape` in native full screen only leaves full screen (browser behaviour), a second one stops the show.
-- **jsdom cannot test contrast or layout.** `color-contrast` is disabled in unit axe runs; T020's test and T038's real-browser axe cover it.
+- **jsdom cannot test contrast or layout.** `color-contrast` is disabled in unit axe runs; T020's test covers contrast, and the manual check in §4.11 covers what needs a real browser.
 - **`aria-live` and re-rendering.** Replacing a live region element on every render defeats announcements. Keep one stable element and change only its text. `role="alert"` regions (error `Banner`) are the exception: they are announced when they appear.
 - **Do not combine `aria-pressed` with a changing label** on the same toggle.
 - **Forced colours** removes `box-shadow` and background images; outlines survive. Emulate `forced-colors: active` in DevTools.

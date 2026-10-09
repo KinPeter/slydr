@@ -30,6 +30,7 @@ While a slide show runs, the user expects to drive it from the keyboard: Space t
 - The accessibility audit of focus handling — T036.
 - Configuration-screen or explorer shortcuts. None exist in v1.
 - Any error screen for a failed player. There is none (the engine exits to the configuration screen with a notice).
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 

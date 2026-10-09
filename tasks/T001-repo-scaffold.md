@@ -27,8 +27,8 @@ fail loudly until the ticket that owns them replaces them.
 ### In scope
 
 - Root `package.json` with `"private": true`, `"type": "module"`,
-  `workspaces: ["shared", "server", "client"]`, `engines: { "node": ">=22" }` and the eight
-  scripts of §13.1 (`dev`, `build`, `start`, `test`, `test:e2e`, `lint`, `format`,
+  `workspaces: ["shared", "server", "client"]`, `engines: { "node": ">=22" }` and the seven
+  scripts of §13.1 (`dev`, `build`, `start`, `test`, `lint`, `format`,
   `typecheck`).
 - `scripts/not-implemented.mjs`, the shared stub used by the placeholder scripts.
 - `tsconfig.base.json`, plus a `tsconfig.json` and (for `shared` and `server`) a
@@ -49,7 +49,7 @@ fail loudly until the ticket that owns them replaces them.
   **T004** to **T007**.
 - Express application code and the real `server/src/index.ts` bootstrap — **T008**, **T009**.
 - `client/index.html`, `vite.config.ts`, React code, design tokens — epic E9.
-- The Playwright configuration and the `test:e2e` script body — **T040**.
+- End-to-end (e2e) testing is out of scope.
 - `README.md` — epic E25. Do not create one in this ticket.
 - Editing `tasks/README.md` or any other file under `tasks/`.
 
@@ -126,7 +126,6 @@ convention, and the `tsconfig.json` files below already include `test`.
     "build": "npm run build -w @slydr/shared && npm run build -w @slydr/server --if-present && npm run build -w @slydr/client --if-present",
     "start": "node scripts/not-implemented.mjs start T039",
     "test": "node scripts/not-implemented.mjs test T002",
-    "test:e2e": "node scripts/not-implemented.mjs test:e2e T040",
     "lint": "node scripts/not-implemented.mjs lint T002",
     "format": "node scripts/not-implemented.mjs format T002",
     "typecheck": "node scripts/not-implemented.mjs typecheck T002"
@@ -229,15 +228,6 @@ is exactly one TypeScript, one ESLint, one Prettier and one Vitest version in th
 | `devDependencies` | `@testing-library/jest-dom` | `^6.8.0` | DOM matchers, wired in T002 |
 | `devDependencies` | `@testing-library/user-event` | `^14.6.1` | realistic input events in tests |
 | `devDependencies` | `jsdom` | `^26.1.0` | DOM environment for Vitest |
-| `devDependencies` | `@playwright/test` | `^1.55.0` | end-to-end tests (§12.4); configured in T040 |
-
-*Decision (not specified):* `@playwright/test` is installed in the `client` workspace even
-though the e2e suite exercises the whole application, because §2.3 and the assignment group
-it with the front-end tooling and Playwright needs no server code at import time. T040
-decides where the test files live and may add a root script that delegates to the client
-workspace. Installing the package does **not** download browsers; that is a separate
-`npx playwright install` step owned by T040 and the CI workflow, and it fetches prebuilt
-browser binaries, never compiling anything.
 
 Exact dependency names above are authoritative. If a name is unavailable on the registry,
 stop and report rather than substituting a different package.
@@ -539,7 +529,6 @@ export {};
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
@@ -583,7 +572,7 @@ with the repository root as the working directory on every OS.
 
 When a later ticket implements a script, it replaces that script's value in the root
 `package.json`. When the last stub is gone, delete `scripts/not-implemented.mjs` in the same
-change (T040 is expected to be the last; it owns `test:e2e`).
+change.
 
 ### 4.7 `.gitignore`
 
@@ -602,11 +591,9 @@ coverage/
 .env.*
 !.env.example
 
-# Playwright artefacts
+# Test artefacts
 test-results/
-playwright-report/
 blob-report/
-playwright/.cache/
 
 # Thumbnail cache (the default location is outside the repo; these cover
 # SLYDR_CACHE_DIR being pointed inside the working tree during development or tests)
@@ -696,9 +683,9 @@ Perform in this order from `C:\Users\PeterKin\code\slydr`:
 
 - [ ] `package.json` at the root has `"private": true`, `"type": "module"`,
       `"workspaces": ["shared", "server", "client"]` and `"engines": { "node": ">=22" }`.
-- [ ] The root defines exactly the scripts `dev`, `build`, `start`, `test`, `test:e2e`,
+- [ ] The root defines exactly the scripts `dev`, `build`, `start`, `test`,
       `lint`, `format`, `typecheck`.
-- [ ] `npm run dev`, `npm start`, `npm test`, `npm run test:e2e`, `npm run lint`,
+- [ ] `npm run dev`, `npm start`, `npm test`, `npm run lint`,
       `npm run format` and `npm run typecheck` each print a message naming the script and its
       owning ticket and exit with a **non-zero** code (verify with `echo $?` in Git Bash or
       `$LASTEXITCODE` in PowerShell).
@@ -720,8 +707,8 @@ Perform in this order from `C:\Users\PeterKin\code\slydr`:
 - [ ] `tsconfig.base.json` sets `strict` to `true`; `shared` and `server` use
       `moduleResolution: "NodeNext"` and `client` uses `"bundler"`; no tsconfig sets
       `composite` or `references`.
-- [ ] `.gitignore` ignores `node_modules/`, `dist/`, `.env`, `test-results/`,
-      `playwright-report/` and the thumbnail cache directories; `package-lock.json` is not
+- [ ] `.gitignore` ignores `node_modules/`, `dist/`, `.env`, `test-results/`
+      and the thumbnail cache directories; `package-lock.json` is not
       ignored.
 - [ ] `.nvmrc` contains `22`.
 - [ ] `git log --oneline` shows exactly one commit; `git ls-files` contains
@@ -759,8 +746,8 @@ automatically from then on:
 ## 8. Notes and gotchas
 
 - **Stubs failing is the feature.** It is expected and correct that most root scripts exit
-  non-zero after this ticket. Do not "fix" them by making them exit 0; tickets T002, T019,
-  T039 and T040 replace them.
+  non-zero after this ticket. Do not "fix" them by making them exit 0; tickets T002, T019
+  and T039 replace them.
 - **Relative import extensions.** In `shared/src` and `server/src` an import of `./app` fails
   under `NodeNext`; it must be `./app.js`. In `client/src` the opposite holds. Mixing these up
   is the most common first-day error in this layout.
@@ -776,8 +763,5 @@ automatically from then on:
   `--omit=optional` would break `sharp` entirely.
 - **`lucide-react` is `0.x`.** Its minor version changes can rename icons. The `^0.544.0`
   range keeps patch updates only; bumping the minor is a deliberate act.
-- **Playwright browsers** are not installed by `npm install`. That is by design (§2.3 and
-  NFR-9 favour no network activity beyond the registry at install time); T040 and the CI
-  workflow run `npx playwright install` explicitly.
 - **Open items from §16.2** do not affect this ticket. The default port (4317) is not
   referenced anywhere here.

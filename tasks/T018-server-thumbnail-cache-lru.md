@@ -357,7 +357,7 @@ When a test needs `atime` and `mtime` to differ, call `fs.utimes(file, atimeDate
 
 ## 8. Notes and gotchas
 
-- **The sweep must never delay a request.** It is asynchronous end to end, bounded in concurrency, started from a deferred timer and unref'd. Do not call `fs.*Sync` anywhere in this module, and do not `await` it from the bootstrap or from a route.
+- **The sweep must never delay a request.** It is asynchronous throughout, bounded in concurrency, started from a deferred timer and unref'd. Do not call `fs.*Sync` anywhere in this module, and do not `await` it from the bootstrap or from a route.
 - **The sweep must never throw into the request path.** There is no request path in this module.
 - **Do not trust `atime`.** Section 4.5 is the heart of this ticket. A sweep that sorts by `atimeMs` alone will behave correctly on a developer's Linux box and wrongly on every default Windows install, and the failure is silent: the cache still stays under the cap, it just evicts the wrong files. The other half of the fix (touching on hits) is in T016.
 - **Never delete what you do not recognise.** The name filters (`/^[0-9a-f]{2}$/` directories, `/^[0-9a-f]{32}\.webp$/` files, `.tmp` suffix) are a safety net against `SLYDR_CACHE_DIR` being pointed at a directory with other content. Keep them strict.

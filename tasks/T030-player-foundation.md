@@ -91,7 +91,8 @@ needs no refactor of anything built here.
 - The synchronous `requestFullscreen()` call inside the "Play slide show" click handler
   (FR-16.1) and the rendering of the player's exit notice on the configuration screen —
   **T029** (and the `notice` state and `exitPlayer` action — **T024**). §4.6 below restates the
-  contract so the ordering can be tested here.
+   contract so the ordering can be tested here.
+- **End-to-end (e2e) testing is out of scope.**
 
 ## 3. Prerequisites and assumed state
 
@@ -645,7 +646,7 @@ Implementation notes:
 
 This is the single most easily broken requirement in the player, so it is specified
 precisely. **The handler itself belongs to the configuration screen (T029 §4.8); this ticket
-adds no code to it and only tests the ordering end to end.**
+adds no code to it and only tests the ordering fully.**
 
 Browsers grant fullscreen only from inside a user-gesture handler, synchronously. By the
 time React has mounted `Player.tsx`, the gesture has expired and the request is refused.
@@ -962,7 +963,7 @@ on and are cheap, stable selectors for T032 and T033. The `.player` element is a
 its inline `style` custom properties (`--kb-duration`, `--player-transition-dur`); this ticket
 sets no inline style.
 
-**E2E test hooks (required by T038).** The player root carries `data-testid="player"` (shown above). In `SlideImage.tsx`, the `<img>` of the layer currently shown (the `current` layer, never the hidden `next` layer and never a blurred background layer from T031) carries `data-testid="slide-current"`; the `next` layer carries none. Add no other `data-testid` attributes in this ticket.
+**Test hooks.** The player root carries `data-testid="player"` (shown above). In `SlideImage.tsx`, the `<img>` of the layer currently shown (the `current` layer, never the hidden `next` layer and never a blurred background layer from T031) carries `data-testid="slide-current"`; the `next` layer carries none. Add no other `data-testid` attributes in this ticket.
 
 **No theme switch, and no theme-dependent logic, anywhere in this file or its children.**
 The player's only contact with the theme is the `--player-bg` custom property, and that

@@ -534,7 +534,7 @@ function renderBody() {
 }
 ```
 
-- The view-mode toggle already lives in the header and already calls `actions.setViewMode`; T024's persistence effect (through T023) debounces it to `slydr.explorer.viewMode` at 250 ms. This ticket must verify the round trip end to end: pressing "Grid view", reloading, and landing in grid view.
+- The view-mode toggle already lives in the header and already calls `actions.setViewMode`; T024's persistence effect (through T023) debounces it to `slydr.explorer.viewMode` at 250 ms. This ticket must verify the round trip fully: pressing "Grid view", reloading, and landing in grid view.
 - A corrupt or unknown stored value degrades to `"list"` silently through the validating reader (§6.2). Add a test for a stored `"mosaic"`.
 - All four FR-14.10 states are shared: skeletons during the first load become **skeleton tiles** in grid mode (Decision (not specified): render 24 skeleton tiles, since a grid shows far more entries per screen than a list); the empty message, the inline retryable error and the truncation notice are rendered by `Explorer.tsx` and need no change.
 

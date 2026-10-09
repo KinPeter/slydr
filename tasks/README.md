@@ -82,18 +82,16 @@ write, Definition of done, Notes and gotchas.
 | [T035](T035-responsive-pass.md) | Responsive pass across all three screens | E20 | T026–T034 |
 | [T036](T036-accessibility-pass.md) | Accessibility pass across all three screens | E21 | T026–T034 |
 | [T037](T037-test-fixture-generator.md) | Test fixture tree generator | E22 | T001, T004 |
-| [T038](T038-e2e-playwright-suite.md) | Playwright end-to-end suite | E22 | T034, T036, T037, T039 |
 | [T039](T039-production-serving.md) | Serve the built client from the server, `npm start` | E23 | T009, T019, T021 |
-| [T040](T040-cross-platform-ci.md) | Cross-platform CI, `sharp` prebuilt check, e2e leg | E24 | T038, T039 |
+| [T040](T040-cross-platform-ci.md) | Cross-platform CI and `sharp` prebuilt check | E24 | T039 |
 | [T041](T041-readme-and-docs.md) | README and user documentation | E25 | T039, T040 |
 
 ## Notes
 
 - Unit and API tests ship **inside** the ticket that introduces the logic (per
-  specification.md §12.6), so epic E22 reduces to the fixture generator (T037) and the
-  Playwright suite (T038).
+  specification.md §12.6), so epic E22 reduces to the fixture generator (T037).
 - Phase 3 and Phase 4 are independent after T004–T007 and can run in parallel.
-- **Tooling tests.** Code outside the three workspaces (`scripts/`, `e2e/support/`) is tested with Vitest in a fourth root project, `tooling` (node environment), created by T037 with `include: ['scripts/**/*.test.{ts,mjs}', 'e2e/support/**/*.test.ts']`. `npm test` is the single entry point; no ticket uses `node:test` or adds a separate test script. Root `typecheck` additions are appended to T002's chain, never restated.
+- **Tooling tests.** Code outside the three workspaces (`scripts/`) is tested with Vitest in a fourth root project, `tooling` (node environment), created by T037 with `include: ['scripts/**/*.test.{ts,mjs}']`. `npm test` is the single entry point; no ticket uses `node:test` or adds a separate test script. Root `typecheck` additions are appended to T002's chain, never restated.
 - Tests live in `<workspace>/test/`, mirroring `src/` (never next to the source): Vitest
   only discovers `test/**/*.test.{ts,tsx}` (T001 §4.1, T002 §4.7). Reference snippets in
   tickets must compile under the repo's strict flags (`noUncheckedIndexedAccess`,
@@ -111,7 +109,7 @@ write, Definition of done, Notes and gotchas.
 - `SLYDR_ROOT` is a test-only jail-root override (§3.1) and must never be documented as
   a user feature.
 
-### UI name contract (binding for T026, T029, T033, T035, T036, T038, T041)
+### UI name contract (binding for T026, T029, T033, T035, T036, T041)
 
 Accessible names, headings and titles are fixed here; tickets quote this table and tests use these exact strings.
 
@@ -145,11 +143,10 @@ One row per verification script. "Step" is the position in the single `verify` j
 | Bundle size report | T019, T039 | `npm run check:bundle` | after build (report only) |
 | Production smoke and startup time | T039 | `npm run smoke:prod` | after build (report only) |
 | README drift check | T041 | `npm run docs:check` | after tests |
-| Playwright e2e (Chromium only, incl. axe) | T038 | `npm run test:e2e` | last |
 
 ### Port allocation
 
-`4317` development API and default `npm start`; `5173` Vite; `4417` Playwright e2e (T038); `4517` `smoke:prod` (T039); `4617` CI check scripts (T040).
+`4317` development API and default `npm start`; `5173` Vite; `4517` `smoke:prod` (T039); `4617` CI check scripts (T040).
 - Server conventions shared by T011-T018:
   - **Dependency injection, no singletons.** `createApp(config, logger?, deps?)` builds every
     router and service. Routers are factories (`createFsRouter({ logger })`,

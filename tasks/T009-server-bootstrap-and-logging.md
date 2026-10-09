@@ -57,6 +57,7 @@ path outside a single validated root.
   readiness log line described in §4.5.
 - The thumbnail cache LRU sweep that §5.6 says runs at startup — owned by the thumbnail
   ticket in epic E8. This ticket only passes `cacheDir` and `cacheMaxMb` through in config.
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 
@@ -544,7 +545,7 @@ Per specification §12.1. All tests run in the Vitest `node` environment from T0
   `startPort === 0` (reachable via `PORT=0`, T008) so integration tests need not hunt for a
   free port; assert the resulting port is non-zero and that `attempted` is `[0]`.
 
-**`server/test/index.integration.test.ts`** — one end-to-end boot of the real entry point.
+**`server/test/index.integration.test.ts`** — one integration boot of the real entry point.
 
 - `boots on an ephemeral port against a fixture root and answers /api/health` — spawn
   `process.execPath` with args `['--import', 'tsx', 'server/src/index.ts']` (no shell, no

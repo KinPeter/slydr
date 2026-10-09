@@ -38,6 +38,7 @@ Three details carry the real weight. First, the theme must be applied before fir
 - Placing the toggle into the explorer and configuration headers — **T026** (explorer header) and **T029** (configuration screen). This ticket delivers the component and states where it belongs; the screens mount it.
 - The README text about the theme and the pre-paint script — **T041** (T041 creates the README; no earlier ticket edits it).
 - Sending the CSP response header itself — **T039** owns production headers. This ticket makes the markup compliant with the policy that ticket will send.
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 
@@ -687,9 +688,9 @@ describe('client scaffold')
 
 All other cases of that file stay as T019 wrote them.
 
-### End-to-end (owned by the e2e ticket, listed here for traceability)
+### Verification scope
 
-Specification §12.4 scenario 3 — "OS dark is respected on first load; the toggle overrides it; the override survives a reload" — is the Playwright counterpart, using Playwright's `colorScheme: 'dark'` emulation. It is the only place the real CSS cascade can be observed, since jsdom does not evaluate media queries. Note in the pull request that this ticket's behaviour is covered there.
+End-to-end (e2e) testing is out of scope. No e2e counterpart exists.
 
 ## 7. Definition of done
 
@@ -712,7 +713,7 @@ Specification §12.4 scenario 3 — "OS dark is respected on first load; the tog
 - **Do not inline the script "for speed".** It would violate `script-src 'self'` (§3.4) in production and the theme would silently stop applying, with only a console CSP violation to explain it. The §4.1 decision and its comments exist to stop that regression.
 - **Two implementations of one rule** (three files once T023 lands, but only `theme-init.js` is a separate reader; `theme.ts` then delegates to `storage.ts`). `theme-init.js` and `theme.ts` both read `slydr.theme` and both map it to `data-theme`. That duplication is unavoidable: one must run before any bundle is parsed, the other inside React. Both files carry a "keep in sync" comment, and `theme-init.test.ts` plus `theme.test.ts` assert the same behaviour so a divergence fails the suite. Do not try to import the TypeScript helper from the public file — that would make it a module and defeat the pre-paint guarantee.
 - **The theme key is special in the T023 persistence layer.** T023 (which depends on this ticket) owns a validating, debounced, schema-versioned `localStorage` module for the other `slydr.*` keys, and it later moves the storage calls of `theme.ts` into that module without changing `theme.ts`'s exports. `slydr.theme` is read by `theme-init.js` before any module loads, so it must stay readable with a raw `getItem` and a literal key, and it must be written immediately rather than debounced. T023 must not route it through the debounced writer. One consequence worth knowing: `slydr.schemaVersion` mismatch handling (treat all other keys as absent) does **not** apply to `slydr.theme`, because the pre-paint script cannot afford to validate a second key. **Decision (not specified):** the theme key is exempt from schema-version invalidation; the worst case is a stale but still-valid `"light"`/`"dark"` string, which is harmless.
-- **jsdom cannot evaluate media queries.** `window.matchMedia` in jsdom returns a stub with `matches: false` and no working listeners, so every test touching OS preference must install the helper from §6. Real cascade verification is Playwright's job (§12.4 scenario 3).
+- **jsdom cannot evaluate media queries.** `window.matchMedia` in jsdom returns a stub with `matches: false` and no working listeners, so every test touching OS preference must install the helper from §6. Real cascade verification is done manually in a browser at both OS preferences (see Definition of done); component tests cover the `data-theme` attribute contract jsdom can observe.
 - **`StrictMode` double-invokes effects** in development. The `matchMedia` effect therefore attaches, detaches and reattaches its listener. The cleanup function makes this harmless; if a listener-count assertion is flaky, check that the cleanup actually removes the same function reference it added.
 - **No cross-tab synchronisation** (§16.1 A1). Do not add a `storage`-event listener to sync the theme between tabs. Slydr assumes single-tab use, and a `storage` listener here would also have to reason about the override-versus-OS precedence a second time.
 - **No "System" third state in the UI** (§6.3 specifies a two-state toggle). `followSystemTheme` exists for completeness and tests. If a third state is ever wanted, note that it needs a different control shape — a two-state button cannot express three states accessibly.

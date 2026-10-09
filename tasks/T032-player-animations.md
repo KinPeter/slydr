@@ -42,6 +42,7 @@ Only `opacity` and `transform` may animate (NFR-4), so the compositor can run ev
 - Any change to the stored configuration. The reduced-motion override never writes anything.
 - Swipe gestures, per-slide custom effects, or random effect selection (excluded by the specification).
 - Changing the nominal values of §16.2. They remain tunables in `tokens.css`.
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 
@@ -58,7 +59,7 @@ The repository is an npm workspaces monorepo (`shared`, `server`, `client`). Eve
 - Fit rules (FR-16.3): `object-fit: contain; object-position: center`. `.player` uses `height: 100vh` followed by `height: 100dvh`.
 - Slide advance is timestamp scheduling in `usePlayerEngine`: a single `setTimeout` for the remaining milliseconds, with `performance.now()` timestamps (no `setInterval`, no `requestAnimationFrame`). It is not driven by animation events. The engine keeps its bookkeeping in a ref and mirrors what the UI renders into `useState`; there is no reducer.
 - T030 states that a backward move always mounts and decodes its target and never reuses the lingering `previous` layer.
-- `SlideImage` carries `data-testid="slide-current"` on the `<img>` of the `current` layer (required by T038); this ticket keeps it (section 4.3).
+- `SlideImage` carries `data-testid="slide-current"` on the `<img>` of the `current` layer (required by component tests); this ticket keeps it (section 4.3).
 
 ### From T031
 
@@ -243,7 +244,7 @@ Rendered structure:
 </div>
 ```
 
-- **`data-testid="slide-current"` stays on the `<img>`** (not the wrapper) of the layer whose `role` is `current`, exactly as T030 §4.13 requires and T038 relies on (`getByTestId('slide-current')` reads its `src`). `next` and `previous` layers carry no test id, and neither does any background cover. No other `data-testid` is added.
+- **`data-testid="slide-current"` stays on the `<img>`** (not the wrapper) of the layer whose `role` is `current`, exactly as T030 §4.13 requires (`getByTestId('slide-current')` reads its `src` in component tests). `next` and `previous` layers carry no test id, and neither does any background cover. No other `data-testid` is added.
 - `data-role`, `data-motion` and `data-phase` exist for tests and for debugging; the CSS reads them too. Tests never look at CSS Module class names.
 - The inline `animationPlayState` is deliberate. `jsdom` cannot compute CSS Modules, so an inline style is the only way to assert that pausing sets `animation-play-state: paused` (spec §9.3). Changing a running animation's play state does not restart it.
 - The wrapper receives the same `slide.key` key from `PlayerStage` as before. The `<img>` never gets its own key.

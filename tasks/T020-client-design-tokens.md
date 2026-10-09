@@ -35,6 +35,7 @@ The ticket also centralizes the two tuning values the specification explicitly f
 - The player's actual background layers (**T031**), Ken Burns keyframes and crossfade implementation (**T032**), controls overlay (**T033**) and keyboard handling (**T034**) consume the tokens defined here but own their own code.
 - The full responsive pass across all three screens at every breakpoint — **T035**. This ticket only establishes the breakpoint values as a convention and the global gutter/overflow rules.
 - Webfont loading. There is none: NFR-9 forbids outbound requests, so `--font-ui` is a system font stack.
+- End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
 
@@ -536,7 +537,7 @@ export function cx(...parts: Array<string | false | null | undefined>): string {
 
 For TypeScript, add a module declaration so `import styles from './X.module.css'` typechecks. `vite/client` already provides `declare module '*.module.css'`, which is in the client `tsconfig.json` `types` array from T019, so no extra file should be needed — verify this and only add `client/src/styles/css-modules.d.ts` if `tsc --noEmit` complains.
 
-A note for the `position: sticky` consumers (T026/T029): sticky headers and footers rely on no ancestor having a non-`visible`/non-`clip` overflow. The e2e suite (T038) should include a scroll check on the explorer.
+A note for the `position: sticky` consumers (T026/T029): sticky headers and footers rely on no ancestor having a non-`visible`/non-`clip` overflow. Cover this with a manual scroll check on the explorer; end-to-end (e2e) testing is out of scope.
 
 ### 4.6 A worked example for the authoring convention
 
@@ -720,7 +721,7 @@ Per §12.6, both themes must be checked and the layout verified at 320 px and 19
 
 - **Both dark blocks are mandatory.** It is tempting to keep only `@media (prefers-color-scheme: dark)` and add `[data-theme]` handling in JS. That breaks the override in one direction: a user on a light OS could never force dark. Equally, keeping only the attribute block means the OS no longer drives anything until the user clicks the toggle. §6.3 asks for both because both are needed, and the duplication is the cost of a mechanism that needs no JavaScript to be correct at first paint.
 - **Keep the two dark blocks in sync.** Duplicated values drift. The §6 test that compares the two property maps exists specifically to catch that, and it should be treated as load-bearing rather than noise. If you refactor to avoid duplication (for example by promoting a `[data-theme='dark']` class onto the media-query selector list), keep the test and update it to match the new structure.
-- **`@media (prefers-color-scheme: dark)` in jsdom.** jsdom's `matchMedia` has no real media-query evaluation, so a component test cannot observe the cascade. That is why the tests in this ticket parse the CSS text instead of asserting on `getComputedStyle`. Live cascade verification belongs to the Playwright suite (§12.4 scenario 3, which uses Playwright's `colorScheme` emulation).
+- **`@media (prefers-color-scheme: dark)` in jsdom.** jsdom's `matchMedia` has no real media-query evaluation, so a component test cannot observe the cascade. That is why the tests in this ticket parse the CSS text instead of asserting on `getComputedStyle`. Live cascade verification is manual; end-to-end (e2e) testing is out of scope.
 - **CSS comments do not nest.** The breakpoint documentation block in §4.3 therefore has no inline `/* ... */` markers inside the outer comment. An inner `*/` would close the outer comment and leak the rest of the block into the stylesheet as invalid CSS.
 - **Never `overflow-x: hidden` on html/body.** It makes the body a scroll container and silently disables viewport-relative `position: sticky`. Use `overflow-x: clip` on `body` only, and fix the component that overflows rather than relying on the clip.
 - **`color-scheme` lives in `tokens.css`.** A value on `html` in `base.css` would override the per-theme values and bring back dark scrollbars on a forced-light page.

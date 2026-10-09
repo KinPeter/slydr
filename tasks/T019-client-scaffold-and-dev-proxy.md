@@ -24,7 +24,7 @@ After this ticket the client renders a trivial placeholder page, builds to `clie
 - Configure the Vite dev server: `host: '127.0.0.1'`, `port: 5173`, `strictPort: true`, and a `/api` proxy targeting `http://127.0.0.1:4317`.
 - Configure the production build to emit into `client/dist` with source maps and a minimal manual chunking strategy.
 - `client/index.html` with the `<meta name="color-scheme" content="light dark">` tag required by §6.3 and a clearly marked, commented placeholder for the anti-FOUC theme script that T021 fills in.
-- A minimal `client/src/App.tsx` that renders a heading and the result of a single `GET /api/health` call, proving the proxy works end to end.
+- A minimal `client/src/App.tsx` that renders a heading and the result of a single `GET /api/health` call, proving the proxy works.
 - Two small tweaks to the T002 client test config (§4.8) so CSS Modules resolve in later component tests.
 - The root `package.json` scripts that orchestrate development (`dev`, `dev:shared`, `dev:server`, `dev:client`, `size:client`), the server workspace's `dev` script, and `scripts/check-client-size.mjs`.
 - Browser auto-open exactly once, on the Vite side only.
@@ -42,7 +42,7 @@ After this ticket the client renders a trivial placeholder page, builds to `clie
 - The typed API client in `client/src/api/client.ts` — **T025**. The health call in this ticket's `App.tsx` is a raw inline `fetch`, and T025 removes it.
 - Production single-origin static hosting of `client/dist` from Express, the `npm start` script, and the CSP response headers — **T039**.
 - The Express server itself and all `/api/*` endpoints — **T008–T018**.
-- Playwright end-to-end configuration — **T038** owns it.
+- End-to-end (e2e) testing is out of scope.
 - Using `@tanstack/react-virtual` — T001 already installed it; the explorer virtualization ticket (**T028**) is its first consumer. `lucide-react` is likewise installed and first used by T021/T022.
 
 ## 3. Prerequisites and assumed state
@@ -53,7 +53,7 @@ The repository contains the monorepo scaffold from **T001** and the tooling from
 
 - Root `package.json`: `"workspaces": ["shared", "server", "client"]`, `"private": true`, `"type": "module"`, `"engines": { "node": ">=22" }`, with `concurrently` and `tsx` as root devDependencies.
 - `tsconfig.base.json` (strict, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `isolatedModules`, …).
-- `client/package.json` — `@slydr/client`, private, ESM. Dependencies already present: `@slydr/shared` (`*`), `@tanstack/react-virtual`, `lucide-react`, `react` and `react-dom` (^19.1). DevDependencies already present: `@playwright/test`, `@testing-library/dom`, `@testing-library/jest-dom`, `@testing-library/react`, `@testing-library/user-event`, `@types/react`, `@types/react-dom`, `@vitejs/plugin-react`, `jsdom` (^26.1.0), `vite` (^7.1.5). Its only script is `typecheck` (`tsc -p tsconfig.json --noEmit`).
+- `client/package.json` — `@slydr/client`, private, ESM. Dependencies already present: `@slydr/shared` (`*`), `@tanstack/react-virtual`, `lucide-react`, `react` and `react-dom` (^19.1). DevDependencies already present: `@testing-library/dom`, `@testing-library/jest-dom`, `@testing-library/react`, `@testing-library/user-event`, `@types/react`, `@types/react-dom`, `@vitejs/plugin-react`, `jsdom` (^26.1.0), `vite` (^7.1.5). Its only script is `typecheck` (`tsc -p tsconfig.json --noEmit`).
 - `client/tsconfig.json` — extends the base; `module: ESNext`, `moduleResolution: bundler`, `lib: [ES2023, DOM, DOM.Iterable]`, `types: ["vite/client"]`, `jsx: react-jsx`, `noEmit: true`, `include: ["src", "test", "vite.config.ts"]`. It already resolves `*.module.css` and `?url` style imports through `vite/client`.
 - `client/src/main.tsx` — a placeholder that contains only `export {};`.
 - `shared/` builds to `shared/dist` and is consumed through the workspace link.
@@ -184,7 +184,7 @@ Notes on the exact option values:
 - There is no `root` option. The config file sits at the package root and Vite uses the config file's directory (when run with `npm run dev -w @slydr/client`, the working directory is the package). This avoids `__dirname`, which does not exist in an ESM config on every Vite code path, and keeps the file free of Node typings.
 - `changeOrigin: false` is deliberate. The Express host guard (§3.4) accepts only `localhost`, `127.0.0.1`, or `[::1]`, optionally with a port. Vite's dev server already listens on `127.0.0.1`, so the forwarded `Host` header is `127.0.0.1:5173`, which passes the guard. Rewriting the origin is unnecessary and would make the guard harder to reason about.
 - `ws: false` because no Slydr endpoint uses WebSockets. Vite's own HMR socket is served from its own path and is unaffected.
-- `strictPort: true` on both server and preview: a silent fallback to port 5174 would break the Playwright base URL and the single browser-open below. Failing loudly is better.
+- `strictPort: true` on both server and preview: a silent fallback to port 5174 would break the single browser-open below. Failing loudly is better.
 - `open: false`: the browser is opened once by the root `dev:client` script (§4.7), not by the config, so that a server restart under `tsx watch` never spawns a second tab.
 - `chunkSizeWarningLimit: 300` is in raw kilobytes, a different measure from the gzipped NFR-8 budget. It is a convenience warning, not the budget check.
 - Do **not** set `base`. The app is served from the origin root in both dev and production, and a non-default `base` would break the T039 static hosting.
@@ -383,7 +383,7 @@ Confirm `npm run lint` is clean on the new files (for example the `<main>`/`<h1>
 
 ## 5. Acceptance criteria
 
-- [ ] `client/package.json` still declares every dependency and version T001 set (including `@tanstack/react-virtual`, `lucide-react`, `@playwright/test`) and now has `dev`, `build`, `preview` scripts besides `typecheck`; no dependency was added, removed or re-versioned.
+- [ ] `client/package.json` still declares every dependency and version T001 set (including `@tanstack/react-virtual`, `lucide-react`) and now has `dev`, `build`, `preview` scripts besides `typecheck`; no dependency was added, removed or re-versioned.
 - [ ] `client/tsconfig.json` has no `vitest/globals` entry, and `client/vitest.config.ts` still has `globals` unset.
 - [ ] `npm ls --workspace @slydr/client` resolves `@slydr/shared` to the local `shared/` directory, not a registry package.
 - [ ] `client/vite.config.ts` sets `server.port` to `5173`, `server.strictPort` to `true`, `server.host` to `'127.0.0.1'`, a `server.proxy` entry for `'/api'` targeting `http://127.0.0.1:4317`, and has no `root` or `base` option.
@@ -442,7 +442,7 @@ Import the default export from `../vite.config` and assert on the resolved objec
 
 ### Proxy verification (manual, recorded in the ticket's verification notes)
 
-An automated proxy test belongs to the Playwright suite, not here — a real proxy test needs two live processes. Verify manually with `curl http://127.0.0.1:5173/api/health` while both processes run, and note the result in the pull request. The end-to-end ticket (T038) adds the automated equivalent as part of e2e scenario 1 in §12.4.
+Proxy verification is manual here — a real proxy check needs two live processes. Verify manually with `curl http://127.0.0.1:5173/api/health` while both processes run, and note the result in the pull request. End-to-end (e2e) testing is out of scope.
 
 ## 7. Definition of done
 
@@ -462,7 +462,7 @@ An automated proxy test belongs to the Playwright suite, not here — a real pro
 - **The proxy is a security feature, not just convenience.** Because dev traffic is single-origin, §3.4's "do not enable CORS" rule holds in every environment. If anyone later reaches for `cors()` on the server, the correct fix is almost always a missing proxy rule here.
 - **A dead upstream must not kill Vite.** When Express is not running, Vite's proxy logs `ECONNREFUSED` and returns a 500 for that request. This is acceptable and expected during development (the client frequently starts before the server finishes booting). Do not add a custom `configure` handler that rethrows; and do not add a retry loop. The placeholder `App.tsx` already degrades to "Local API not reachable."
 - **Port 4317 is an arbitrary pick** (specification §16.2 item 1). The server tries `PORT` then `+1` up to `+9` if the preferred port is busy. The dev proxy, however, targets `4317` as a literal. If the server falls back to 4318 the proxy breaks with a confusing `ECONNREFUSED`. Treat that as a known development wrinkle: free the port rather than making the proxy target dynamic. **Decision (not specified):** the proxy target stays a hard-coded literal, because a dynamic target would require a handshake between two independent processes for a case that only occurs when something else is already squatting the port.
-- **`strictPort` and Playwright.** The e2e ticket will assume `5173`. Keeping `strictPort: true` means a port conflict fails fast with a clear message instead of producing a baffling e2e failure against the wrong server.
+- **`strictPort`.** Keeping `strictPort: true` means a port conflict fails fast with a clear message instead of silently serving on the wrong port.
 - **Do not put the theme logic in `main.tsx`.** React mounting happens after first paint, so a theme applied there produces exactly the flash of unstyled/mis-themed content that §6.3 requires be avoided. The placeholder comment in `index.html` says so; keep it.
 - **`StrictMode` double-invocation.** Expect the health `fetch` to fire twice in development. The `AbortController` cleanup makes this harmless. Later tickets (the player's timers, the persistence layer's debounced writes) depend on this pressure being present, so do not remove `StrictMode` to quiet the console.
 - **NFR-9 (no outbound requests).** Nothing in the client may contact anything other than the local API. That rules out Google Fonts links, CDN script tags, analytics, and remote source maps. `--font-ui` in T020 is therefore a system font stack, and no `<link>` to an external host may appear in `index.html`.
