@@ -212,6 +212,221 @@ describe('server bootstrap integration', () => {
     }
   });
 
+  it('installShutdown awaits hooks after close and before exit', async () => {
+    const logs: Array<{ level: string; event: string }> = [];
+    const hookCalls: string[] = [];
+
+    const logger = createLogger({
+      quiet: false,
+      writeOut: () => {},
+      writeErr: () => {},
+    });
+
+    // Spy on the logger
+    const originalInfo = logger.info.bind(logger);
+    logger.info = function (event: string, fields?: Record<string, unknown>) {
+      logs.push({ level: 'info', event });
+      return originalInfo(event, fields);
+    };
+
+    // Create a fake server
+    const config = readServerConfig();
+    const app = createApp(config, logger);
+    const fakeServer = app.listen(0, '127.0.0.1');
+
+    try {
+      await new Promise<void>((resolve) => fakeServer.once('listening', resolve));
+
+      // Track exit calls
+      const exitCodes: number[] = [];
+      const originalExit = process.exit.bind(process);
+      process.exit = ((code?: number) => {
+        exitCodes.push(code ?? 0);
+      }) as unknown as (code?: number | undefined) => never;
+
+      // Remove existing listeners
+      process.removeAllListeners('SIGINT');
+      process.removeAllListeners('SIGTERM');
+      process.removeAllListeners('SIGBREAK');
+
+      try {
+        const hook1 = () => {
+          hookCalls.push('hook1');
+        };
+        const hook2 = () => {
+          hookCalls.push('hook2');
+        };
+
+        installShutdown(fakeServer, logger, [hook1, hook2]);
+
+        // Emit SIGINT
+        process.emit('SIGINT');
+
+        // Wait for async handlers
+        await new Promise<void>((resolve) => setTimeout(resolve, 150));
+
+        // Check hook execution order
+        expect(hookCalls).toEqual(['hook1', 'hook2']);
+
+        // Check that exit was called
+        expect(exitCodes[0]).toBe(0);
+
+        // Check log order
+        const events = logs.map((l: { level: string; event: string }) => l.event);
+        const stoppingIdx = events.indexOf('server.stopping');
+        const stoppedIdx = events.indexOf('server.stopped');
+        expect(stoppingIdx).toBeGreaterThanOrEqual(0);
+        expect(stoppedIdx).toBeGreaterThan(stoppingIdx);
+      } finally {
+        process.exit = originalExit;
+        process.removeAllListeners('SIGINT');
+        process.removeAllListeners('SIGTERM');
+        process.removeAllListeners('SIGBREAK');
+      }
+    } finally {
+      await new Promise<void>((resolve) => fakeServer.close(() => resolve()));
+    }
+  });
+
+  it('a failing hook is logged and does not block the next hook or the exit', async () => {
+    const logs: Array<{ level: string; event: string }> = [];
+    const hookCalls: string[] = [];
+
+    const logger = createLogger({
+      quiet: false,
+      writeOut: () => {},
+      writeErr: () => {},
+    });
+
+    // Spy on the logger
+    const originalWarn = logger.warn.bind(logger);
+    const originalInfo = logger.info.bind(logger);
+    logger.warn = function (event: string, fields?: Record<string, unknown>) {
+      logs.push({ level: 'warn', event });
+      return originalWarn(event, fields);
+    };
+    logger.info = function (event: string, fields?: Record<string, unknown>) {
+      logs.push({ level: 'info', event });
+      return originalInfo(event, fields);
+    };
+
+    // Create a fake server
+    const config = readServerConfig();
+    const app = createApp(config, logger);
+    const fakeServer = app.listen(0, '127.0.0.1');
+
+    try {
+      await new Promise<void>((resolve) => fakeServer.once('listening', resolve));
+
+      // Track exit calls
+      const exitCodes: number[] = [];
+      const originalExit = process.exit.bind(process);
+      process.exit = ((code?: number) => {
+        exitCodes.push(code ?? 0);
+      }) as unknown as (code?: number | undefined) => never;
+
+      // Remove existing listeners
+      process.removeAllListeners('SIGINT');
+      process.removeAllListeners('SIGTERM');
+      process.removeAllListeners('SIGBREAK');
+
+      try {
+        const hook1 = () => {
+          hookCalls.push('hook1');
+          throw new Error('hook1 failed');
+        };
+        const hook2 = () => {
+          hookCalls.push('hook2');
+        };
+
+        installShutdown(fakeServer, logger, [hook1, hook2]);
+
+        // Emit SIGINT
+        process.emit('SIGINT');
+
+        // Wait for async handlers
+        await new Promise<void>((resolve) => setTimeout(resolve, 150));
+
+        // Both hooks should have been called
+        expect(hookCalls).toEqual(['hook1', 'hook2']);
+
+        // A warn should have been logged
+        expect(logs.some((l) => l.level === 'warn')).toBe(true);
+
+        // Exit should still be called
+        expect(exitCodes[0]).toBe(0);
+      } finally {
+        process.exit = originalExit;
+        process.removeAllListeners('SIGINT');
+        process.removeAllListeners('SIGTERM');
+        process.removeAllListeners('SIGBREAK');
+      }
+    } finally {
+      await new Promise<void>((resolve) => fakeServer.close(() => resolve()));
+    }
+  });
+
+  it('installShutdown without hooks behaves as before', async () => {
+    const logs: Array<{ level: string; event: string }> = [];
+
+    const logger = createLogger({
+      quiet: false,
+      writeOut: () => {},
+      writeErr: () => {},
+    });
+
+    // Spy on the logger
+    const originalInfo = logger.info.bind(logger);
+    logger.info = function (event: string, fields?: Record<string, unknown>) {
+      logs.push({ level: 'info', event });
+      return originalInfo(event, fields);
+    };
+
+    // Create a fake server
+    const config = readServerConfig();
+    const app = createApp(config, logger);
+    const fakeServer = app.listen(0, '127.0.0.1');
+
+    try {
+      await new Promise<void>((resolve) => fakeServer.once('listening', resolve));
+
+      // Track exit calls
+      const exitCodes: number[] = [];
+      const originalExit = process.exit.bind(process);
+      process.exit = ((code?: number) => {
+        exitCodes.push(code ?? 0);
+      }) as unknown as (code?: number | undefined) => never;
+
+      // Remove existing listeners
+      process.removeAllListeners('SIGINT');
+      process.removeAllListeners('SIGTERM');
+      process.removeAllListeners('SIGBREAK');
+
+      try {
+        installShutdown(fakeServer, logger);
+
+        // Emit SIGINT
+        process.emit('SIGINT');
+
+        // Wait a bit for async handlers
+        await new Promise<void>((resolve) => setTimeout(resolve, 100));
+
+        // Check logs
+        const events = logs.map((l: { level: string; event: string }) => l.event);
+        expect(events).toContain('server.stopping');
+        expect(events).toContain('server.stopped');
+        expect(exitCodes[0]).toBe(0);
+      } finally {
+        process.exit = originalExit;
+        process.removeAllListeners('SIGINT');
+        process.removeAllListeners('SIGTERM');
+        process.removeAllListeners('SIGBREAK');
+      }
+    } finally {
+      await new Promise<void>((resolve) => fakeServer.close(() => resolve()));
+    }
+  });
+
   it('exits non-zero with a clear message when SLYDR_ROOT does not exist', async () => {
     // This test spawns a child process to verify exit behavior
     const nonexistentDir = '/path/that/definitely/does/not/exist/slydr-' + Date.now();

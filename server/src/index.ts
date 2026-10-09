@@ -7,6 +7,7 @@ import { listenWithPortSelection } from './bootstrap/listen.js';
 import { resolveJailRoot, RootResolutionError } from './bootstrap/resolveRoot.js';
 import { createLogger, errorFields } from './logger.js';
 import { setJailRoot } from './security/jail.js';
+import { startCacheSweeper } from './services/cacheSweep.js';
 import type { Server } from 'node:http';
 import type { Logger } from './logger.js';
 
@@ -26,8 +27,15 @@ function sameFile(a: string, b: string): boolean {
 
 /**
  * Install graceful shutdown handlers. Exported so tests can call it.
+ *
+ * Hooks are awaited sequentially after server.close completes and before process.exit(0).
+ * A failing hook is logged at warn and does not block subsequent hooks or the exit.
  */
-export function installShutdown(server: Server, logger: Logger): void {
+export function installShutdown(
+  server: Server,
+  logger: Logger,
+  hooks: Array<() => void | Promise<void>> = [],
+): void {
   let shuttingDown = false;
 
   function handleSignal(signal: NodeJS.Signals): void {
@@ -45,13 +53,24 @@ export function installShutdown(server: Server, logger: Logger): void {
     logger.info('server.stopping', { signal });
 
     // Stop accepting new connections
-    server.close(() => {
+    server.close(async () => {
+      // Close idle keep-alive sockets immediately
+      server.closeIdleConnections();
+
+      // Await all hooks sequentially
+      for (const hook of hooks) {
+        try {
+          await hook();
+        } catch (err) {
+          logger.warn('shutdown.hookFailed', {
+            errMessage: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+
       logger.info('server.stopped');
       process.exit(0);
     });
-
-    // Close idle keep-alive sockets immediately
-    server.closeIdleConnections();
 
     // Force exit after 5 seconds if graceful shutdown doesn't complete
     const forceExitTimer = setTimeout(() => {
@@ -190,11 +209,18 @@ export async function main(): Promise<void> {
     rootOverridden: resolvedRoot.overridden,
   });
 
-  // 11. TODO: T039 insertion point for static hosting of client/dist and browser auto-open.
+  // 11. Start the cache sweeper
+  const sweeper = startCacheSweeper({
+    cacheDir: config.cacheDir,
+    maxBytes: Math.floor(config.cacheMaxMb * 1024 * 1024),
+    logger,
+  });
+
+  // 12. TODO: T039 insertion point for static hosting of client/dist and browser auto-open.
   // Do not add express.static here or any browser-opening code; T039 owns that.
 
-  // 12. Install shutdown handlers
-  installShutdown(server, logger);
+  // 13. Install shutdown handlers
+  installShutdown(server, logger, [() => sweeper.stop()]);
 }
 
 // Guard invocation so the module is importable by tests without starting a server
