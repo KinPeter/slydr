@@ -1,0 +1,34 @@
+{
+  "name": "slydr",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local, browser-based slide show player for folders of images.",
+  "workspaces": ["shared", "server", "client"],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/not-implemented.mjs dev T019",
+    "build": "npm run build -w @slydr/shared && npm run build -w @slydr/server --if-present && npm run build -w @slydr/client --if-present",
+    "start": "node scripts/not-implemented.mjs start T039",
+    "test": "node scripts/not-implemented.mjs test T002",
+    "lint": "node scripts/not-implemented.mjs lint T002",
+    "format": "node scripts/not-implemented.mjs format T002",
+    "typecheck": "node scripts/not-implemented.mjs typecheck T002"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.44.0",
+    "vitest": "^3.2.4"
+  }
+}

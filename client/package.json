@@ -1,0 +1,28 @@
+{
+  "name": "@slydr/client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Slydr web UI (Vite + React 19).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@slydr/shared": "*",
+    "@tanstack/react-virtual": "^3.13.12",
+    "lucide-react": "^0.544.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "jsdom": "^26.1.0",
+    "vite": "^7.1.5"
+  }
+}

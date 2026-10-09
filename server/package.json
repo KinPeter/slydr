@@ -1,0 +1,23 @@
+{
+  "name": "@slydr/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Slydr local API server (Express 5).",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@slydr/shared": "*",
+    "express": "^5.1.0",
+    "sharp": "~0.34.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.18.0",
+    "@types/supertest": "^6.0.3",
+    "supertest": "^7.1.4"
+  }
+}

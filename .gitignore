@@ -1,29 +1,36 @@
-docs/codemie/
-
-# deps
+# Dependencies
 node_modules/
-.pnpm-store/
 
-# build output
+# Build output
 dist/
-build/
-.next/
-out/
+*.tsbuildinfo
 coverage/
+.vite/
 
-# env
+# Environment and secrets
 .env
 .env.*
 !.env.example
 
-# logs
-logs/
+# Test artefacts
+test-results/
+blob-report/
+
+# Thumbnail cache (the default location is outside the repo; these cover
+# SLYDR_CACHE_DIR being pointed inside the working tree during development or tests)
+.slydr-cache/
+.cache/
+thumbnails/
+
+# Tool output that is not project source
+docs/codemie/
+
+# Logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
-# os / editor
+# OS and editor noise
 .DS_Store
 Thumbs.db
+desktop.ini
+.idea/
