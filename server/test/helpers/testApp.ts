@@ -11,6 +11,7 @@
 import type { Express } from 'express';
 import type { Logger } from '../../src/logger.js';
 import type { ServerConfig } from '../../src/config/env.js';
+import type { AppDeps } from '../../src/app.js';
 import type { TestLogEvent } from './logger.js';
 import { createTestLogger } from './logger.js';
 import { makeTempBase, removeTree } from './fs.js';
@@ -28,6 +29,8 @@ export interface TestEnvOptions {
   populate?: (root: string, outside: string) => Promise<void>;
   /** Overrides for makeTestConfig */
   config?: Partial<ServerConfig>;
+  /** Optional dependency builder called with (cacheDir, logger); result is passed to createApp. */
+  deps?: (ctx: { cacheDir: string; logger: Logger }) => AppDeps;
 }
 
 export interface TestEnv {
@@ -98,12 +101,13 @@ export async function createTestEnv(options?: TestEnvOptions): Promise<TestEnv> 
   // Step 6: Create test logger
   const { logger, events } = createTestLogger();
 
-  // Step 7: Create the app with merged config
+  // Step 7: Create the app with merged config and optional deps
   const config = makeTestConfig({
     cacheDir: cacheDirPath,
     ...options?.config,
   });
-  const app = createApp(config, logger);
+  const appDeps = options?.deps ? options.deps({ cacheDir: cacheDirPath, logger }) : {};
+  const app = createApp(config, logger, appDeps);
 
   return {
     app,

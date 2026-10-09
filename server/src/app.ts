@@ -7,9 +7,20 @@ import { securityHeaders } from './middleware/securityHeaders.js';
 import { createHealthRouter } from './routes/health.js';
 import { createFsRouter } from './routes/fs.js';
 import { createImageRouter } from './routes/image.js';
+import { createThumbRouter } from './routes/thumb.js';
 import type { ServerConfig } from './config/env.js';
 import type { Logger } from './logger.js';
 import { createLogger, errorFields } from './logger.js';
+import { createThumbnailService, type ThumbnailService } from './services/thumbnails.js';
+
+/**
+ * Optional dependencies for the app, allowing tests to inject custom services.
+ * Updated by T017: added thumbnails service injection for testing.
+ */
+export interface AppDeps {
+  /** Test seam: inject a service with a counting renderer or a temporary cache directory. */
+  thumbnails?: ThumbnailService;
+}
 
 /**
  * Creates an Express application with all middleware and routers configured per spec §3–9.
@@ -17,8 +28,9 @@ import { createLogger, errorFields } from './logger.js';
  * This allows the error envelope to log errors with full context, while keeping
  * module-level state free of mutable logger references.
  * Updated by T009: now accepts an optional logger.
+ * Updated by T017: now accepts optional dependencies for testing.
  */
-export function createApp(_config: ServerConfig, logger?: Logger): Express {
+export function createApp(_config: ServerConfig, logger?: Logger, deps: AppDeps = {}): Express {
   const app = express();
 
   // Create a logger if not provided
@@ -48,8 +60,12 @@ export function createApp(_config: ServerConfig, logger?: Logger): Express {
   // 5b. createImageRouter() mounted at /api/image (T015)
   app.use('/api/image', createImageRouter({ logger: log }));
 
-  // 5c. Placeholder comment marking where later routers are mounted
-  // TODO: Mount /api/thumb router here (T016, T017)
+  // 5c. createThumbRouter() mounted at /api/thumb (T017)
+  const thumbnails =
+    deps.thumbnails ?? createThumbnailService({ cacheDir: _config.cacheDir, logger: log });
+  app.use('/api/thumb', createThumbRouter({ logger: log, thumbnails }));
+
+  // 5d. Placeholder comment marking where later routers are mounted
   // TODO: Static hosting of client/dist is inserted here by T039
 
   // 6. apiNotFoundHandler mounted at /api
