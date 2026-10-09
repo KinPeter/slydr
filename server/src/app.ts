@@ -6,9 +6,21 @@ import { methodGuard } from './middleware/methodGuard.js';
 import { securityHeaders } from './middleware/securityHeaders.js';
 import { createHealthRouter } from './routes/health.js';
 import type { ServerConfig } from './config/env.js';
+import type { Logger } from './logger.js';
+import { createLogger, errorFields } from './logger.js';
 
-export function createApp(_config: ServerConfig): Express {
+/**
+ * Creates an Express application with all middleware and routers configured per spec §3–9.
+ * The logger is optional; a default is created from config.quiet if not provided.
+ * This allows the error envelope to log errors with full context, while keeping
+ * module-level state free of mutable logger references.
+ * Updated by T009: now accepts an optional logger.
+ */
+export function createApp(_config: ServerConfig, logger?: Logger): Express {
   const app = express();
+
+  // Create a logger if not provided
+  const log = logger ?? createLogger({ quiet: _config.quiet });
 
   // Disable advertising Express
   app.disable('x-powered-by');
@@ -36,7 +48,25 @@ export function createApp(_config: ServerConfig): Express {
   app.use('/api', apiNotFoundHandler);
 
   // 7. createErrorEnvelope() as the final app.use
-  app.use(createErrorEnvelope());
+  // Wire the logger so errors are logged with full context
+  app.use(
+    createErrorEnvelope((event) => {
+      const errFields = errorFields(event.err);
+      const fields = {
+        ...errFields,
+        method: event.method,
+        url: event.url,
+        code: event.code,
+        status: event.status,
+      };
+
+      if (event.status >= 500) {
+        log.error('request.error', fields);
+      } else {
+        log.warn('request.error', fields);
+      }
+    }),
+  );
 
   return app;
 }
