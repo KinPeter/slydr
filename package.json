@@ -14,12 +14,14 @@
   },
   "scripts": {
     "dev": "node scripts/not-implemented.mjs dev T019",
-    "build": "npm run build -w @slydr/shared && npm run build -w @slydr/server --if-present && npm run build -w @slydr/client --if-present",
+    "build": "npm run typecheck && npm run build -w @slydr/shared && npm run build -w @slydr/server --if-present && npm run build -w @slydr/client --if-present",
     "start": "node scripts/not-implemented.mjs start T039",
-    "test": "node scripts/not-implemented.mjs test T002",
-    "lint": "node scripts/not-implemented.mjs lint T002",
-    "format": "node scripts/not-implemented.mjs format T002",
-    "typecheck": "node scripts/not-implemented.mjs typecheck T002"
+    "test": "npm run build -w @slydr/shared && vitest run",
+    "test:watch": "npm run build -w @slydr/shared && vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run build -w @slydr/shared && tsc -p tsconfig.json --noEmit && npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

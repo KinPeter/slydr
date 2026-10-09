@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": [
+    "vitest.config.ts",
+    "shared/vitest.config.ts",
+    "server/vitest.config.ts",
+    "client/vitest.config.ts"
+  ]
+}

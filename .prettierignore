@@ -1,0 +1,18 @@
+node_modules
+dist
+coverage
+.vite
+test-results
+blob-report
+.slydr-cache
+package-lock.json
+.nvmrc
+
+# Planning documents are authored by hand and must not be reflowed.
+tasks
+docs/specification.md
+docs/user-requirements.md
+refinement.md
+
+# Tool output (CodeMie analytics exports), not project source.
+docs
