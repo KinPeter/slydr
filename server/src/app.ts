@@ -6,6 +6,7 @@ import { methodGuard } from './middleware/methodGuard.js';
 import { securityHeaders } from './middleware/securityHeaders.js';
 import { createHealthRouter } from './routes/health.js';
 import { createFsRouter } from './routes/fs.js';
+import { createImageRouter } from './routes/image.js';
 import type { ServerConfig } from './config/env.js';
 import type { Logger } from './logger.js';
 import { createLogger, errorFields } from './logger.js';
@@ -44,8 +45,11 @@ export function createApp(_config: ServerConfig, logger?: Logger): Express {
   // 5. createFsRouter() mounted at /api/fs
   app.use('/api/fs', createFsRouter({ logger: log }));
 
-  // 5b. Placeholder comment marking where later routers are mounted
-  // TODO: Mount /api/image and /api/thumb routers here (T015, T016, T017)
+  // 5b. createImageRouter() mounted at /api/image (T015)
+  app.use('/api/image', createImageRouter({ logger: log }));
+
+  // 5c. Placeholder comment marking where later routers are mounted
+  // TODO: Mount /api/thumb router here (T016, T017)
   // TODO: Static hosting of client/dist is inserted here by T039
 
   // 6. apiNotFoundHandler mounted at /api
