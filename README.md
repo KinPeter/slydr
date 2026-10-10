@@ -1,5 +1,9 @@
 # Slydr
 
+> 🚧 **Caution** 🚧
+> This is a completely vibe-coded application. I intentionally did not read or touch a single line of code from it. I wanted to try how it works, and also practice creating and using some custom agentic workflows. So all I did was to write down my simple list of requirements, instruct the AI to create the specification and the tasks, then to create the agents and commands to handle them - and then it did... handled them.
+> (Agents and models used: Claude Code with Opus 5 and Sonnet 5.5 for the theoretical part, Claude Code with Haiku 4.5 + Opencode with Muse Spark 1.3 and GPT 5.6 Mini for all the rest.)
+
 Slydr plays slide shows of the pictures stored in folders on your own computer. You start it
 from a terminal, it opens in your web browser, and everything stays on your machine: there is
 no account, no cloud and no network access.
