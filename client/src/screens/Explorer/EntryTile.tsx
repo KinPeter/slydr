@@ -26,7 +26,7 @@ export const EntryTile = forwardRef<
       data-index={index}
       data-type={entry.type}
       data-hidden={entry.hidden}
-      className={`${styles.tile}${className ? ` ${className}` : ''}`}
+      className={`${styles.tile}${active ? ` ${styles.keyboardSelected}` : ''}${className ? ` ${className}` : ''}`}
       style={style}
       title={entry.name}
     >

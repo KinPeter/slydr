@@ -2,6 +2,12 @@
   min-width: 0;
   touch-action: manipulation;
 }
+.keyboardSelected {
+  background: var(--bg-sunken);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--radius-md);
+}
 .media {
   aspect-ratio: 1 / 1;
   display: grid;
