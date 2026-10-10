@@ -123,6 +123,22 @@ export default defineConfig([
     files: ['client/**/*.{ts,tsx}'],
   },
 
+  // NFR-9: only client/src/api/client.ts may reach the network, and only the
+  // local same-origin API. Every other client module goes through it.
+  {
+    files: ['client/src/**/*.{ts,tsx}'],
+    ignores: ['client/src/api/client.ts', '**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        { name: 'fetch', message: 'Use client/src/api/client.ts (NFR-9: local API only).' },
+        { name: 'XMLHttpRequest', message: 'Use client/src/api/client.ts.' },
+        { name: 'WebSocket', message: 'No sockets: NFR-9.' },
+        { name: 'EventSource', message: 'No event streams: NFR-9.' },
+      ],
+    },
+  },
+
   // client/public/*.js are plain classic scripts served as-is (theme-init.js).
   {
     files: ['client/public/**/*.js'],
