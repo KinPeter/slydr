@@ -1,0 +1,79 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-width: 0;
+}
+.screen > header {
+  flex: 0 0 auto;
+}
+.notices {
+  flex: 0 0 auto;
+}
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-width: 0;
+}
+.empty {
+  min-height: 100%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: 8px;
+}
+.empty span {
+  display: block;
+  color: var(--fg-muted);
+}
+.skeletons {
+  display: flex;
+  flex-direction: column;
+}
+.skeletonRow {
+  height: var(--explorer-row-h, 48px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+.skeletonIcon {
+  flex: 0 0 22px;
+}
+.skeletonName {
+  height: 1em;
+}
+.progress {
+  height: 2px;
+  overflow: hidden;
+  background: var(--bg-sunken);
+}
+.progress::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--accent);
+  animation: explorer-progress 1.2s linear infinite;
+}
+@keyframes explorer-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@media (pointer: coarse) {
+  .skeletonRow {
+    height: 56px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress::after {
+    animation: none;
+    width: 100%;
+  }
+}

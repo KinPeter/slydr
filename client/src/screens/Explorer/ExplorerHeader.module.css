@@ -1,0 +1,32 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.spacer {
+  flex: 1;
+  min-width: 8px;
+}
+@media (max-width: 767.98px) {
+  .header {
+    align-content: center;
+  }
+  .header :global(nav) {
+    flex-basis: 100%;
+  }
+}
+@media (min-width: 1024px) {
+  .label {
+    display: inline;
+  }
+}
+@media (max-width: 1023.98px) {
+  .label {
+    display: none;
+  }
+}

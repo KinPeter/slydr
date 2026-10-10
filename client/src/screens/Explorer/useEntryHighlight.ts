@@ -1,0 +1,53 @@
+import { useCallback, useState } from 'react';
+import type { FsEntry } from '@slydr/shared';
+
+export function useEntryHighlight(
+  entries: FsEntry[],
+  navigate: (path: string) => void,
+  parentPath: string | null,
+) {
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const move = useCallback(
+    (index: number) => {
+      const next = Math.max(0, Math.min(entries.length - 1, index));
+      setActiveIndex(entries.length ? next : -1);
+      if (entries[next])
+        document.getElementById(`slydr-entry-${next}`)?.scrollIntoView({ block: 'nearest' });
+    },
+    [entries],
+  );
+  const onKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
+        return;
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        move(activeIndex < 0 ? 0 : activeIndex + 1);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        move(activeIndex < 0 ? entries.length - 1 : activeIndex - 1);
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        move(0);
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        move(entries.length - 1);
+      } else if (event.key === 'Enter' && entries[activeIndex]?.type === 'folder')
+        navigate(entries[activeIndex].path);
+      else if (event.key === 'Backspace' || (event.key === 'ArrowLeft' && event.altKey)) {
+        event.preventDefault();
+        if (parentPath !== null) navigate(parentPath);
+      }
+    },
+    [activeIndex, entries, move, navigate, parentPath],
+  );
+  const handleEntryPointer = useCallback(
+    (kind: 'click' | 'double' | 'touch', index: number) => {
+      if (kind === 'click') setActiveIndex(index);
+      else if (kind === 'double' && entries[index]?.type === 'folder')
+        navigate(entries[index].path);
+    },
+    [entries, navigate],
+  );
+  return { activeIndex, setActiveIndex, onKeyDown, handleEntryPointer };
+}

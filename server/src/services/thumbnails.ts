@@ -344,6 +344,7 @@ export function createThumbnailService(options: ThumbnailServiceOptions): Thumbn
     const shardDir = path.dirname(job.finalPath);
     const startMs = now();
     let tmpPath: string | undefined;
+    let cacheHit = false;
 
     try {
       // Step 1: ensure shard directory
@@ -361,6 +362,7 @@ export function createThumbnailService(options: ThumbnailServiceOptions): Thumbn
           .then((s) => (s.size > 0 ? s : null))
           .catch(() => null);
         if (stat) {
+          cacheHit = true;
           return; // Already rendered; skip
         }
 
@@ -398,6 +400,10 @@ export function createThumbnailService(options: ThumbnailServiceOptions): Thumbn
           throw lastRenderErr;
         }
       });
+
+      if (cacheHit) {
+        return { filePath: job.finalPath, key: job.key, cached: false };
+      }
 
       // Step 4: atomic rename
       if (!tmpPath) throw new Error('tmpPath not initialized');
