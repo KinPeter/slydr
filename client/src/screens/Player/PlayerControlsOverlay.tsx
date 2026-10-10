@@ -16,6 +16,7 @@ export interface PlayerControlsOverlayProps {
   total: number;
   visible: boolean;
   holdProps: IdleReveal['holdProps'];
+  fullscreenSupported?: boolean;
 }
 export const PlayerControlsOverlay = forwardRef<HTMLDivElement, PlayerControlsOverlayProps>(
   function PlayerControlsOverlay(
@@ -31,6 +32,7 @@ export const PlayerControlsOverlay = forwardRef<HTMLDivElement, PlayerControlsOv
       total,
       visible,
       holdProps,
+      fullscreenSupported = true,
     },
     ref,
   ) {
@@ -68,12 +70,14 @@ export const PlayerControlsOverlay = forwardRef<HTMLDivElement, PlayerControlsOv
           aria-label="Next image"
           onClick={onNext}
         />
-        <IconButton
-          className={styles.button}
-          icon={fullscreen ? Minimize : Maximize}
-          aria-label={fullscreen ? 'Exit full screen' : 'Enter full screen'}
-          onClick={onToggleFullscreen}
-        />
+        {fullscreenSupported && (
+          <IconButton
+            className={styles.button}
+            icon={fullscreen ? Minimize : Maximize}
+            aria-label={fullscreen ? 'Exit full screen' : 'Enter full screen'}
+            onClick={onToggleFullscreen}
+          />
+        )}
         <IconButton
           className={styles.button}
           icon={X}

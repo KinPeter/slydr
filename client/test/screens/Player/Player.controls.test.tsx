@@ -77,6 +77,10 @@ describe('Player controls integration', () => {
   });
 
   it('follows engine fullscreen state and renders the 1-based counter', async () => {
+    Object.defineProperty(document.documentElement, 'requestFullscreen', {
+      configurable: true,
+      value: () => Promise.resolve(),
+    });
     renderPlayer();
     expect(screen.getByText('1 / 2')).toBeInTheDocument();
     const element = document.createElement('div');
@@ -86,5 +90,6 @@ describe('Player controls integration', () => {
     Object.defineProperty(document, 'fullscreenElement', { configurable: true, value: null });
     fireEvent(document, new Event('fullscreenchange'));
     expect(screen.getByRole('button', { name: 'Enter full screen' })).toBeInTheDocument();
+    delete (document.documentElement as { requestFullscreen?: unknown }).requestFullscreen;
   });
 });

@@ -11,8 +11,20 @@ export function isFullscreen(): boolean {
   return getFullscreenElement() !== null;
 }
 export function isFullscreenSupported(): boolean {
-  const doc = document as Document & { webkitExitFullscreen?: () => void };
-  return 'fullscreenEnabled' in document || typeof doc.webkitExitFullscreen === 'function';
+  const doc = document as Document & {
+    fullscreenEnabled?: boolean;
+    webkitExitFullscreen?: () => void;
+    webkitFullscreenEnabled?: boolean;
+  };
+  const root = document.documentElement as Element & {
+    requestFullscreen?: () => Promise<void>;
+    webkitRequestFullscreen?: () => Promise<void> | void;
+  };
+  const standardSupported =
+    typeof root.requestFullscreen === 'function' && doc.fullscreenEnabled !== false;
+  const webkitSupported =
+    typeof root.webkitRequestFullscreen === 'function' && doc.webkitFullscreenEnabled !== false;
+  return standardSupported || webkitSupported;
 }
 export function exitFullscreenSafe(): void {
   const doc = document as Document & { webkitExitFullscreen?: () => void };

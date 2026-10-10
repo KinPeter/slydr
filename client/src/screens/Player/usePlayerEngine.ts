@@ -7,6 +7,7 @@ import {
   FULLSCREEN_CHANGE_EVENTS,
   isFullscreen,
   requestFullscreenSync,
+  isFullscreenSupported,
 } from './fullscreen';
 import type {
   PlayerControls,
@@ -381,6 +382,7 @@ export function usePlayerEngine({
     next: () => move(1, 'manual'),
     previous: () => move(-1, 'manual'),
     toggleFullscreen: () => {
+      if (!isFullscreenSupported()) return;
       if (isFullscreen()) exitFullscreenSafe();
       else requestFullscreenSync(document.documentElement);
     },

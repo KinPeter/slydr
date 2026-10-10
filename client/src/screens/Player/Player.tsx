@@ -11,6 +11,9 @@ import { transitionDuration } from './motion';
 import { useEffectiveAnimations } from './useEffectiveAnimations';
 import { PlayerControlsOverlay } from './PlayerControlsOverlay';
 import { useIdleReveal } from './useIdleReveal';
+import { usePlayerKeyboard } from './usePlayerKeyboard';
+import { useRevealOnFullscreenChange } from './useRevealOnFullscreenChange';
+import { isFullscreenSupported } from './fullscreen';
 
 export function Player() {
   const app = useAppState();
@@ -21,6 +24,8 @@ export function Player() {
   const { animations } = useEffectiveAnimations(app.config);
   const idle = useIdleReveal(2000, { hold: engine.state.status === 'paused' });
   const { visible: controlsVisible, reveal } = idle;
+  usePlayerKeyboard({ controls: engine.controls, reveal });
+  useRevealOnFullscreenChange(engine.state.isFullscreen, reveal);
   useLayoutEffect(() => {
     if (!animations && engine.state.previous) releasePrevious(engine.state.previous.key);
   }, [animations, engine.state.previous, releasePrevious]);
@@ -82,6 +87,7 @@ export function Player() {
             total={engine.state.counter.total}
             visible={controlsVisible}
             holdProps={idle.holdProps}
+            fullscreenSupported={isFullscreenSupported()}
           />
         }
         background={
