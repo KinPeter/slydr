@@ -10,6 +10,7 @@ import { setJailRoot } from './security/jail.js';
 import { startCacheSweeper } from './services/cacheSweep.js';
 import type { Server } from 'node:http';
 import type { Logger } from './logger.js';
+import { openBrowser, shouldOpen } from './openBrowser.js';
 
 export const BIND_HOST = '127.0.0.1';
 
@@ -108,6 +109,8 @@ export function installShutdown(
  * Main entry point: resolve jail root, create app, select port, listen, and set up shutdown.
  */
 export async function main(): Promise<void> {
+  const argv = process.argv.slice(2);
+  const wantsOpen = argv.includes('--open');
   // 1. Read configuration
   const config = readServerConfig();
 
@@ -168,8 +171,24 @@ export async function main(): Promise<void> {
   // 6. Initialize the path-jail module with the resolved root (T010 placeholder)
   setJailRoot(resolvedRoot.absolute);
 
+  // Locate the build relative to this module, never relative to cwd.
+  const clientDir = fileURLToPath(new URL('../../client/dist', import.meta.url));
+  const hasClient = fs.existsSync(path.join(clientDir, 'index.html'));
+  if (!hasClient && wantsOpen) {
+    // This is a user-facing diagnostic, not an FS path operation.
+    // eslint-disable-next-line no-restricted-syntax
+    process.stderr.write(`Client build not found at ${clientDir}. Run "npm run build" first.\n`);
+    process.exit(1);
+    return;
+  }
+  if (!hasClient) {
+    logger.warn('startup.clientBuildMissing', {
+      message: 'client/dist not found; serving API only. Run npm run build.',
+    });
+  }
+
   // 7. Create the app
-  const app = createApp(config, logger);
+  const app = createApp(hasClient ? { ...config, clientDir } : config, logger);
 
   // 8. Listen on the selected port
   let listenResult;
@@ -207,7 +226,10 @@ export async function main(): Promise<void> {
     url: url.origin,
     root: resolvedRoot.absolute,
     rootOverridden: resolvedRoot.overridden,
+    startupMs: Math.round(process.uptime() * 1000),
   });
+  // eslint-disable-next-line no-restricted-syntax
+  if (!config.quiet) process.stdout.write(`Slydr is running at ${url.origin}\n`);
 
   // 11. Start the cache sweeper
   const sweeper = startCacheSweeper({
@@ -216,8 +238,9 @@ export async function main(): Promise<void> {
     logger,
   });
 
-  // 12. TODO: T039 insertion point for static hosting of client/dist and browser auto-open.
-  // Do not add express.static here or any browser-opening code; T039 owns that.
+  if (hasClient && shouldOpen({ argv, env: process.env })) {
+    openBrowser(url.origin);
+  }
 
   // 13. Install shutdown handlers
   installShutdown(server, logger, [() => sweeper.stop()]);

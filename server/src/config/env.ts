@@ -1,6 +1,8 @@
 import os from 'node:os';
 import path from 'node:path';
 
+/** Environment variables include SLYDR_NO_OPEN=1|true to disable npm start browser opening. */
+
 export interface ServerConfig {
   /** Preferred TCP port. Default 4317. `0` = OS-assigned (tests). */
   port: number;
@@ -14,6 +16,8 @@ export interface ServerConfig {
   cacheMaxMb: number;
   /** True when SLYDR_QUIET is set to a truthy value; suppresses non-error logs. */
   quiet: boolean;
+  /** Absolute path of the built client. Unset when serving API only. */
+  clientDir?: string;
 }
 
 export function readServerConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {

@@ -1,7 +1,8 @@
 import type { RequestHandler } from 'express';
 
-export const CSP_VALUE =
+export const CSP =
   "default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self'";
+export const CSP_VALUE = CSP;
 
 export const securityHeaders: RequestHandler = (req, res, next) => {
   // Set X-Content-Type-Options: nosniff on every response

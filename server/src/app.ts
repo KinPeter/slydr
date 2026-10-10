@@ -3,7 +3,7 @@ import express from 'express';
 import { apiNotFoundHandler, createErrorEnvelope } from './middleware/errorEnvelope.js';
 import { hostCheck } from './middleware/hostCheck.js';
 import { methodGuard } from './middleware/methodGuard.js';
-import { securityHeaders } from './middleware/securityHeaders.js';
+import { CSP, securityHeaders } from './middleware/securityHeaders.js';
 import { createHealthRouter } from './routes/health.js';
 import { createFsRouter } from './routes/fs.js';
 import { createImageRouter } from './routes/image.js';
@@ -12,6 +12,9 @@ import type { ServerConfig } from './config/env.js';
 import type { Logger } from './logger.js';
 import { createLogger, errorFields } from './logger.js';
 import { createThumbnailService, type ThumbnailService } from './services/thumbnails.js';
+import path from 'node:path';
+
+export const HASHED_ASSET = /^assets\/.+-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$/;
 
 /**
  * Optional dependencies for the app, allowing tests to inject custom services.
@@ -65,11 +68,37 @@ export function createApp(_config: ServerConfig, logger?: Logger, deps: AppDeps 
     deps.thumbnails ?? createThumbnailService({ cacheDir: _config.cacheDir, logger: log });
   app.use('/api/thumb', createThumbRouter({ logger: log, thumbnails }));
 
-  // 5d. Placeholder comment marking where later routers are mounted
-  // TODO: Static hosting of client/dist is inserted here by T039
-
-  // 6. apiNotFoundHandler mounted at /api
+  // Unknown API paths must never fall through to the client.
   app.use('/api', apiNotFoundHandler);
+
+  if (_config.clientDir) {
+    app.get('/favicon.ico', (_req, res) => res.status(204).end());
+    const clientDir = _config.clientDir;
+    app.use(
+      express.static(clientDir, {
+        dotfiles: 'ignore',
+        index: 'index.html',
+        redirect: false,
+        etag: true,
+        lastModified: true,
+        maxAge: 0,
+        setHeaders(res, filePath) {
+          const rel = path.relative(clientDir, filePath).split(path.sep).join('/');
+          res.setHeader('X-Content-Type-Options', 'nosniff');
+          res.setHeader(
+            'Cache-Control',
+            HASHED_ASSET.test(rel) ? 'public, max-age=31536000, immutable' : 'no-cache',
+          );
+          if (rel === 'index.html') {
+            res.setHeader('Content-Security-Policy', CSP);
+          }
+        },
+      }),
+    );
+    app.use((_req, res) => {
+      res.status(404).type('text/plain').send('Not found');
+    });
+  }
 
   // 7. createErrorEnvelope() as the final app.use
   // Wire the logger so errors are logged with full context
