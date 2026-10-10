@@ -5,12 +5,14 @@ export type EntryHighlightState = {
   activeIndex: number;
   setActiveIndex: (index: number) => void;
 };
+export type HighlightOptions = { reveal?: (index: number) => void; pageSize?: () => number };
 
 export function useEntryHighlight(
   entries: FsEntry[],
   navigate: (path: string) => void,
   parentPath: string | null,
   shared?: EntryHighlightState,
+  options?: HighlightOptions,
 ) {
   const [localActiveIndex, setLocalActiveIndex] = useState(-1);
   const activeIndex = shared?.activeIndex ?? localActiveIndex;
@@ -19,10 +21,12 @@ export function useEntryHighlight(
     (index: number) => {
       const next = Math.max(0, Math.min(entries.length - 1, index));
       setActiveIndex(entries.length ? next : -1);
-      if (entries[next])
-        document.getElementById(`slydr-entry-${next}`)?.scrollIntoView({ block: 'nearest' });
+      if (entries[next]) {
+        if (options?.reveal) options.reveal(next);
+        else document.getElementById(`slydr-entry-${next}`)?.scrollIntoView({ block: 'nearest' });
+      }
     },
-    [entries, setActiveIndex],
+    [entries, options, setActiveIndex],
   );
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -40,6 +44,11 @@ export function useEntryHighlight(
       } else if (event.key === 'End') {
         event.preventDefault();
         move(entries.length - 1);
+      } else if (event.key === 'PageDown' || event.key === 'PageUp') {
+        event.preventDefault();
+        const size = Math.max(1, options?.pageSize?.() ?? 1);
+        const base = activeIndex < 0 ? (event.key === 'PageDown' ? -1 : 0) : activeIndex;
+        move(base + (event.key === 'PageDown' ? size : -size));
       } else if (event.key === 'Enter' && entries[activeIndex]?.type === 'folder')
         navigate(entries[activeIndex].path);
       else if (event.key === 'Backspace' || (event.key === 'ArrowLeft' && event.altKey)) {
@@ -47,7 +56,7 @@ export function useEntryHighlight(
         if (parentPath !== null) navigate(parentPath);
       }
     },
-    [activeIndex, entries, move, navigate, parentPath],
+    [activeIndex, entries, move, navigate, options, parentPath],
   );
   const handleEntryPointer = useCallback(
     (kind: 'click' | 'double' | 'touch', index: number) => {

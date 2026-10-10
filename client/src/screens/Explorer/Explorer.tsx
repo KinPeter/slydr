@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RootResponse } from '@slydr/shared';
 import { getRoot } from '../../api/client';
 import { useAppActions, useAppState, useExplorerRestore } from '../../state/AppStateProvider';
@@ -12,6 +12,9 @@ import { ExplorerNotices } from './ExplorerNotices';
 import { ExplorerScrollContext } from './ExplorerScrollContext';
 import { useDirectoryListing } from './useDirectoryListing';
 import { useEntryHighlight } from './useEntryHighlight';
+import { useVirtualizationMode } from './virtualization';
+import { VirtualEntryList } from './VirtualEntryList';
+import { VirtualEntryGrid } from './VirtualEntryGrid';
 import { EXPLORER_HEADING, EMPTY_FOLDER, HIDDEN_EMPTY } from './copy';
 import styles from './Explorer.module.css';
 
@@ -42,6 +45,7 @@ export function Explorer() {
   const [root, setRoot] = useState<RootResponse | null>(null);
   const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
   const [restoreNotice, setRestoreNotice] = useState(false);
+  const previousPath = useRef<string | null>(null);
   const listing = useDirectoryListing(state.explorer.path, state.explorer.showHidden);
   const highlight = useEntryHighlight(
     listing.data?.entries ?? [],
@@ -50,6 +54,10 @@ export function Explorer() {
   );
   const { error, requestedPath, fallbackToRoot } = listing;
   const loadedPath = listing.data?.path;
+  const virtual = useVirtualizationMode(
+    listing.data?.path ?? state.explorer.path,
+    listing.data?.entries.length ?? 0,
+  );
   const restoredPath = restore.restoredPath;
   useEffect(() => {
     cachedRoot()
@@ -74,6 +82,17 @@ export function Explorer() {
         restore.markRestoreResolved();
     }
   }, [listing.data, state.explorer.path, actions, restore, restoredPath]);
+  useLayoutEffect(() => {
+    const path = listing.data?.path;
+    if (
+      path !== undefined &&
+      previousPath.current !== null &&
+      path !== previousPath.current &&
+      scrollEl
+    )
+      scrollEl.scrollTop = 0;
+    if (path !== undefined) previousPath.current = path;
+  }, [listing.data?.path, scrollEl]);
   const folderName =
     listing.data?.name || (listing.data?.path === '' ? root?.name : undefined) || '';
   const empty = listing.data?.entries.length === 0 && !listing.loading && !listing.error;
@@ -110,7 +129,23 @@ export function Explorer() {
       );
     if (!listing.data) return null;
     return state.explorer.viewMode === 'grid' ? (
-      <EntryGrid
+      virtual ? (
+        <VirtualEntryGrid
+          entries={listing.data.entries}
+          navigate={listing.navigate}
+          parentPath={listing.data.parentPath}
+          highlight={highlight}
+        />
+      ) : (
+        <EntryGrid
+          entries={listing.data.entries}
+          navigate={listing.navigate}
+          parentPath={listing.data.parentPath}
+          highlight={highlight}
+        />
+      )
+    ) : virtual ? (
+      <VirtualEntryList
         entries={listing.data.entries}
         navigate={listing.navigate}
         parentPath={listing.data.parentPath}

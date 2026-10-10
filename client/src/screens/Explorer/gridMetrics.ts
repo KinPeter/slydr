@@ -3,6 +3,12 @@ export const GRID_MIN_TILE_PX = { base: 104, md: 132, lg: 160 } as const;
 export function columnsFor(containerWidth: number, gapPx: number, minTilePx: number): number {
   return Math.max(1, Math.floor((containerWidth + gapPx) / (minTilePx + gapPx)));
 }
+export function readGridBox(el: HTMLElement) {
+  const cs = getComputedStyle(el);
+  const gap = parseFloat(cs.columnGap) || 0;
+  const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+  return { gap, contentWidth: Math.max(0, el.clientWidth - padX) };
+}
 function media(query: string): MediaQueryList | null {
   return typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(query) : null;
 }

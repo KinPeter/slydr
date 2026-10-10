@@ -37,6 +37,7 @@ export function EntryList({
       tabIndex={0}
       aria-label={FOLDER_CONTENTS}
       aria-activedescendant={activeIndex >= 0 ? `slydr-entry-${activeIndex}` : undefined}
+      data-virtualized="false"
       onKeyDown={onKeyDown}
       onClick={(event) => {
         const i = indexOf(event);

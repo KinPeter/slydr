@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
 import type { FsEntry } from '@slydr/shared';
-import type { EntryHighlightState } from './useEntryHighlight';
+import type { EntryHighlightState, HighlightOptions } from './useEntryHighlight';
 export function useGridHighlight(
   entries: FsEntry[],
   columns: number,
   navigate: (path: string) => void,
   parentPath: string | null,
   shared?: EntryHighlightState,
+  options?: HighlightOptions,
 ) {
   const [localActiveIndex, setLocalActiveIndex] = useState(-1);
   const activeIndex = shared?.activeIndex ?? localActiveIndex;
@@ -15,10 +16,12 @@ export function useGridHighlight(
     (index: number) => {
       const next = entries.length ? Math.max(0, Math.min(entries.length - 1, index)) : -1;
       setActiveIndex(next);
-      if (next >= 0)
-        document.getElementById(`slydr-entry-${next}`)?.scrollIntoView({ block: 'nearest' });
+      if (next >= 0) {
+        if (options?.reveal) options.reveal(next);
+        else document.getElementById(`slydr-entry-${next}`)?.scrollIntoView({ block: 'nearest' });
+      }
     },
-    [entries, setActiveIndex],
+    [entries, options, setActiveIndex],
   );
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -32,6 +35,11 @@ export function useGridHighlight(
       else if (event.key === 'ArrowUp') next = activeIndex < 0 ? 0 : activeIndex - columns;
       else if (event.key === 'Home') next = 0;
       else if (event.key === 'End') next = entries.length - 1;
+      else if (event.key === 'PageDown' || event.key === 'PageUp') {
+        const size = Math.max(1, options?.pageSize?.() ?? columns);
+        const base = activeIndex < 0 ? (event.key === 'PageDown' ? -1 : 0) : activeIndex;
+        next = base + (event.key === 'PageDown' ? size : -size);
+      }
       if (next !== null) {
         event.preventDefault();
         move(next);
@@ -42,7 +50,7 @@ export function useGridHighlight(
         if (parentPath !== null) navigate(parentPath);
       }
     },
-    [activeIndex, columns, entries, move, navigate, parentPath],
+    [activeIndex, columns, entries, move, navigate, options, parentPath],
   );
   const handleEntryPointer = useCallback(
     (kind: 'click' | 'double' | 'touch', index: number) => {

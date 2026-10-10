@@ -1,0 +1,16 @@
+.virtualGrid {
+  position: relative;
+  box-sizing: border-box;
+  padding: var(--space-3) var(--space-4);
+}
+.virtualRow {
+  position: absolute;
+  top: 0;
+  left: var(--space-4);
+  right: var(--space-4);
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  align-items: start;
+}
