@@ -123,6 +123,18 @@ export default defineConfig([
     files: ['client/**/*.{ts,tsx}'],
   },
 
+  // client/public/*.js are plain classic scripts served as-is (theme-init.js).
+  {
+    files: ['client/public/**/*.js'],
+    languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
+    rules: {
+      'no-unused-vars': ['error', { caughtErrors: 'none' }],
+      // The TS extension rule also fires on plain scripts via the shared
+      // recommended set; the core rule above governs this ES5 file instead.
+      '@typescript-eslint/no-unused-vars': 'off',
+    },
+  },
+
   // Tooling files at the repo root and in scripts/ run in Node.
   {
     files: ['*.{js,mjs,ts}', 'scripts/**/*.mjs', '*/vitest.config.ts'],

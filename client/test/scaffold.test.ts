@@ -24,11 +24,17 @@ describe('client scaffold', () => {
     expect(html).toContain('<meta name="color-scheme" content="light dark"');
   });
 
-  it('index.html reserves the anti-FOUC theme script placeholder in <head>', async () => {
+  it('index.html loads the anti-FOUC theme script in <head>', async () => {
     const html = await readClientFile('index.html');
     const head = html.slice(0, html.indexOf('</head>'));
-    expect(head).toContain('T021');
-    expect(head).toMatch(/anti-FOUC/i);
+    expect(head).toContain('<script src="/theme-init.js"></script>');
+    expect(head.indexOf('<script src="/theme-init.js"></script>')).toBeGreaterThan(
+      head.indexOf('name="color-scheme"'),
+    );
+    // The classic theme script precedes the deferred module entry script.
+    expect(html.indexOf('<script src="/theme-init.js"></script>')).toBeLessThan(
+      html.indexOf('<script type="module" src="/src/main.tsx">'),
+    );
   });
 
   it('index.html loads /src/main.tsx as a module script', async () => {
