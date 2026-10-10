@@ -1,0 +1,231 @@
+.nav {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: var(--target-min);
+}
+
+/* Pinned and kept segment buttons use the ghost visual style. */
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  max-width: 12rem;
+  padding-inline: var(--space-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+
+@media (hover: hover) {
+  .segment:hover {
+    background: var(--bg-sunken);
+  }
+}
+
+.segment:active {
+  background: var(--bg-sunken);
+}
+
+/* The current folder is a non-interactive label, still full-height for rhythm. */
+.current {
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  max-width: 16rem;
+  padding-inline: var(--space-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.separator {
+  display: inline-flex;
+  flex: none;
+  color: var(--fg-muted);
+}
+
+/* Below 480px the Home segment is the icon alone: the text is visually hidden
+   (mobile-first default) while the accessible name stays "Home" through the
+   button's explicit aria-label. Only min-width breakpoints per the convention. */
+.homeText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.homeIcon {
+  display: inline-flex;
+}
+
+@media (min-width: 480px) {
+  .homeText {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
+.ellipsisItem {
+  position: relative;
+}
+
+.ellipsisWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  padding: 0;
+  background: transparent;
+  color: var(--fg-muted);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+@media (hover: hover) {
+  .ellipsis:hover {
+    background: var(--bg-sunken);
+    color: var(--fg);
+  }
+}
+
+.ellipsis:active {
+  background: var(--bg-sunken);
+  color: var(--fg);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  inset-inline-start: 0;
+  z-index: 10;
+  min-width: 10rem;
+  max-width: min(20rem, calc(100vw - 2 * var(--page-gutter)));
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+}
+
+.menuItem {
+  margin: 0;
+  padding: 0;
+}
+
+.menuButton {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--target-min);
+  min-width: var(--target-min);
+  padding-inline: var(--space-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+  background: transparent;
+  color: var(--fg);
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+
+@media (hover: hover) {
+  .menuButton:hover {
+    background: var(--bg-sunken);
+  }
+}
+
+.menuButton:active,
+.menuButton:focus-visible {
+  background: var(--bg-sunken);
+}
+
+/* Hidden measuring clone: never flickers the visible DOM, never in the
+   accessibility tree (aria-hidden plus inert), never focusable, never hit. */
+.measure {
+  visibility: hidden;
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  display: flex;
+  align-items: center;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  list-style: none;
+  pointer-events: none;
+}
+
+.measureItem {
+  display: flex;
+  align-items: center;
+}
+
+.measureSegment {
+  border-width: 0;
+}
+
+@media (pointer: coarse) {
+  .segment,
+  .current,
+  .ellipsis,
+  .menuButton {
+    min-width: var(--target-min-coarse); /* 48px */
+    min-height: var(--target-min-coarse);
+  }
+}

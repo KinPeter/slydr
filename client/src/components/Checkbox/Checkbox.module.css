@@ -1,0 +1,141 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The whole label row is the hit target (44px minimum). The row stretches to
+   the container width; min-width states the 44px floor literally. */
+.root {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: var(--target-min);
+  min-width: var(--target-min);
+  padding-block: var(--space-1);
+  cursor: pointer;
+}
+
+/* Visually hidden but still focusable and in the tab order: never
+   display: none or visibility: hidden. */
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.box {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-block-start: 0.125rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  color: var(--accent-fg);
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+.tick {
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.input:checked + .box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.input:checked + .box .tick {
+  opacity: 1;
+}
+
+/* The ring goes on the visible box via the sibling selector: a ring drawn on
+   the 1px hidden input would be invisible. */
+.input:focus-visible + .box {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .root:hover .box {
+    border-color: var(--accent);
+  }
+}
+
+.root:active .box {
+  border-color: var(--accent);
+}
+
+.input:disabled + .box {
+  opacity: 0.5;
+}
+
+.input:disabled ~ .text {
+  cursor: not-allowed;
+}
+
+.root:has(.input:disabled) {
+  cursor: not-allowed;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  color: var(--fg);
+}
+
+.description,
+.note {
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--fg-muted);
+}
+
+.note {
+  padding-inline-start: calc(1.25rem + var(--space-3));
+  padding-block-end: var(--space-1);
+}
+
+@media (pointer: coarse) {
+  .root {
+    min-height: var(--target-min-coarse); /* 48px */
+    min-width: var(--target-min-coarse);
+  }
+}
+
+/* Allowed exception: system colour keywords for Windows high-contrast
+   (forced-colors) mode. Not authored colours; the literal-colour guard only
+   matches hex and functional notation. */
+@media (forced-colors: active) {
+  .box {
+    background: Canvas;
+    border-color: ButtonText;
+    color: Canvas;
+  }
+
+  .input:checked + .box {
+    background: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  .input:focus-visible + .box {
+    outline-color: Highlight;
+  }
+}

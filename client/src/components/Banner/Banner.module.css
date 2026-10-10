@@ -1,0 +1,81 @@
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--fg);
+  border: 1px solid var(--border-subtle);
+  border-inline-start: 4px solid var(--accent);
+}
+
+/* Decision (not specified): there is no warning colour token, so the warning
+   bar and icon reuse --accent; the TriangleAlert icon plus the visually hidden
+   "Warning: " prefix distinguish it without a new token. */
+.warning {
+  border-inline-start-color: var(--accent);
+}
+
+.error {
+  border-inline-start-color: var(--danger);
+}
+
+.icon {
+  flex: none;
+  margin-block-start: 0.125rem;
+  color: var(--accent);
+}
+
+.error .icon {
+  color: var(--danger);
+}
+
+.text {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 600;
+}
+
+.message {
+  overflow-wrap: anywhere;
+}
+
+.action {
+  display: inline-flex;
+  flex: none;
+  align-self: center;
+}
+
+.dismiss {
+  flex: none;
+  align-self: flex-start;
+}
+
+/* Allowed exception: system colour keywords for Windows high-contrast
+   (forced-colors) mode. Not authored colours; the literal-colour guard only
+   matches hex and functional notation. */
+@media (forced-colors: active) {
+  .banner {
+    background: Canvas;
+    color: CanvasText;
+    border-color: ButtonText;
+  }
+
+  .info,
+  .warning {
+    border-inline-start-color: Highlight;
+  }
+
+  .error {
+    border-inline-start-color: Highlight;
+  }
+
+  .icon {
+    color: CanvasText;
+  }
+}

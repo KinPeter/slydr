@@ -1,0 +1,28 @@
+.svg {
+  display: inline-block;
+  vertical-align: middle;
+  animation: slydr-spin 1s linear infinite;
+}
+
+/* transform is the only animated property, so the compositor runs it. */
+@keyframes slydr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Decision (not specified): the global reduced-motion rule would freeze the
+   spinner and make "busy" invisible, so the rotation is intentionally slowed
+   rather than removed. The essential information (activity is happening) cannot
+   otherwise be conveyed without motion. */
+@media (prefers-reduced-motion: reduce) {
+  .svg {
+    animation-duration: 2.4s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+}

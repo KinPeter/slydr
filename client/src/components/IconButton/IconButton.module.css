@@ -1,0 +1,22 @@
+/* A pressed ghost icon button keeps its sunken background and accent colour. */
+.pressed {
+  background: var(--bg-sunken);
+  color: var(--accent);
+}
+
+@media (hover: hover) {
+  .pressed:hover {
+    background: var(--bg-sunken);
+    color: var(--accent);
+  }
+}
+
+/* Allowed exception: system colour keywords for Windows high-contrast
+   (forced-colors) mode. Not authored colours; the literal-colour guard only
+   matches hex and functional notation. */
+@media (forced-colors: active) {
+  .pressed {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

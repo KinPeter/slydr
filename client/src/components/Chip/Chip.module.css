@@ -1,0 +1,81 @@
+/* A static chip is not a touch target (no interaction), so it is exempt from
+   the 44px minimum. The dismiss button below is the interactive part. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+  background: var(--bg-sunken);
+  color: var(--fg);
+  border: 1px solid var(--border-subtle);
+}
+
+.accent {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: transparent;
+}
+
+.content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The visible button stays small so the pill keeps its size; the ::before layer
+   extends the hit area to the full 44px (48px on coarse pointers) target. */
+.dismiss {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  margin: 0;
+  margin-inline-end: calc(var(--space-1) * -1);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: inherit;
+  cursor: pointer;
+}
+
+.dismiss::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+}
+
+@media (hover: hover) {
+  .dismiss:hover {
+    background: var(--bg-sunken);
+  }
+
+  .accent .dismiss:hover {
+    background: var(--accent-hover);
+  }
+}
+
+.dismiss:active {
+  background: var(--bg-sunken);
+}
+
+.accent .dismiss:active {
+  background: var(--accent-active);
+}
+
+@media (pointer: coarse) {
+  .dismiss::before {
+    min-width: var(--target-min-coarse); /* 48px */
+    min-height: var(--target-min-coarse);
+  }
+}

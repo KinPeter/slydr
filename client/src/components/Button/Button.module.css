@@ -1,0 +1,144 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: var(--target-min); /* 44px touch target, spec §9.5 */
+  min-height: var(--target-min);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: 1px solid transparent;
+}
+
+@media (hover: hover) {
+  .primary:hover {
+    background: var(--accent-hover);
+  }
+}
+
+.primary:active {
+  background: var(--accent-active);
+}
+
+.secondary {
+  background: var(--bg-elevated);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+@media (hover: hover) {
+  .secondary:hover {
+    background: var(--bg-sunken);
+  }
+}
+
+.secondary:active {
+  background: var(--bg-sunken);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--button-fg, var(--fg));
+  border: 1px solid transparent;
+}
+
+@media (hover: hover) {
+  .ghost:hover {
+    background: var(--button-hover-bg, var(--bg-sunken));
+  }
+}
+
+.ghost:active {
+  background: var(--button-hover-bg, var(--bg-sunken));
+}
+
+.sizeMd {
+  min-height: var(--target-min);
+  font-size: var(--text-md);
+}
+
+.sizeLg {
+  min-height: var(--target-min-coarse); /* 48px */
+  font-size: var(--text-lg);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* The loading spinner is absolutely positioned over the leading padding so the
+   button width does not change when loading toggles; the label stays rendered. */
+.spinnerSlot {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+}
+
+/* Keeps the leading icon's space while the absolute spinner covers for it. */
+.iconHidden {
+  visibility: hidden;
+}
+
+.iconSlot {
+  display: inline-flex;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (pointer: coarse) {
+  .button {
+    min-width: var(--target-min-coarse); /* 48px */
+    min-height: var(--target-min-coarse);
+  }
+}
+
+/* Allowed exception: system colour keywords for Windows high-contrast
+   (forced-colors) mode. Not authored colours; the literal-colour guard only
+   matches hex and functional notation. */
+@media (forced-colors: active) {
+  .primary {
+    background: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+  }
+
+  .secondary {
+    background: ButtonFace;
+    color: ButtonText;
+    border-color: ButtonText;
+  }
+
+  .ghost {
+    background: Canvas;
+    color: CanvasText;
+    border-color: Canvas;
+  }
+
+  .button:disabled {
+    color: GrayText;
+  }
+}

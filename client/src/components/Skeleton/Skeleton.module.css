@@ -1,0 +1,58 @@
+.skeleton {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.circle {
+  border-radius: var(--radius-pill);
+}
+
+/* The shimmer layer slides across the block; only transform is animated. */
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, var(--bg-elevated) 50%, transparent 100%);
+  transform: translateX(-100%);
+  animation: slydr-shimmer 1.4s var(--ease-standard) infinite;
+}
+
+@keyframes slydr-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.line {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, var(--bg-elevated) 50%, transparent 100%);
+  transform: translateX(-100%);
+  animation: slydr-shimmer 1.4s var(--ease-standard) infinite;
+}
+
+/* Decorative motion is not essential: the static block remains. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after,
+  .line::after {
+    animation: none;
+  }
+}
