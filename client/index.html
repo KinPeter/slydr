@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      Spec §6.3: declares support for both colour schemes so native scrollbars,
+      form controls and the browser's own UA styles follow the active theme.
+    -->
+    <meta name="color-scheme" content="light dark" />
+    <title>Slydr</title>
+
+    <!--
+      ANTI-FOUC THEME SCRIPT PLACEHOLDER — owned by T021.
+      T021 inserts here the code that resolves the effective theme
+      (the stored `slydr.theme` value, else `matchMedia('(prefers-color-scheme: dark)')`)
+      and sets `data-theme` on <html> BEFORE first paint, so the page never
+      flashes the wrong theme. It must be compatible with the §3.4 CSP
+      `script-src 'self'`; T021 records that decision.
+      Do not add theme logic to main.tsx — by the time React mounts it is too late.
+    -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

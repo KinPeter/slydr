@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -115,6 +116,11 @@ export default defineConfig([
       'react-hooks/exhaustive-deps': 'error',
       'react/prop-types': 'off',
     },
+  },
+
+  {
+    ...jsxA11y.flatConfigs.recommended,
+    files: ['client/**/*.{ts,tsx}'],
   },
 
   // Tooling files at the repo root and in scripts/ run in Node.

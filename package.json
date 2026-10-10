@@ -13,7 +13,11 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "node scripts/not-implemented.mjs dev T019",
+    "dev": "concurrently --kill-others --names \"shared,api,web\" --prefix-colors \"yellow,cyan,magenta\" \"npm:dev:shared\" \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:shared": "tsc -p shared/tsconfig.build.json --watch --preserveWatchOutput",
+    "dev:server": "npm run dev --workspace @slydr/server",
+    "dev:client": "npm run dev --workspace @slydr/client -- --open",
+    "size:client": "node scripts/check-client-size.mjs",
     "build": "npm run typecheck && npm run build -w @slydr/shared && npm run build -w @slydr/server --if-present && npm run build -w @slydr/client --if-present",
     "start": "node scripts/not-implemented.mjs start T039",
     "test": "npm run build -w @slydr/shared && vitest run",
@@ -28,6 +32,7 @@
     "concurrently": "^9.2.1",
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.4.0",

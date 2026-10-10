@@ -1,2 +1,14 @@
-// Placeholder. The real React entry point is added in the client-shell tickets.
-export {};
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+const container = document.getElementById('root');
+if (!container) {
+  throw new Error('Slydr: #root container missing from index.html');
+}
+
+createRoot(container).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
