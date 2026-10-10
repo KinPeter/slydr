@@ -9,6 +9,7 @@
   padding: 0 16px;
   user-select: none;
   min-width: 0;
+  touch-action: manipulation;
 }
 @media (hover: hover) {
   .row:hover {

@@ -4,6 +4,7 @@ import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle';
 import type { ListResponse, RootResponse } from '@slydr/shared';
 import { GRID_VIEW, LIST_VIEW, SHOW_HIDDEN, imageCount } from './copy';
 import styles from './ExplorerHeader.module.css';
+import { useBreadcrumbCap } from './useBreadcrumbCap';
 
 export function ExplorerHeader({
   data,
@@ -27,9 +28,15 @@ export function ExplorerHeader({
   onShowHidden: (value: boolean) => void;
 }) {
   const path = data?.path ?? requestedPath;
+  const breadcrumbCap = useBreadcrumbCap();
   return (
     <header className={styles.header}>
-      <Breadcrumb path={path} rootTitle={root?.absoluteRoot} onNavigate={onNavigate} />
+      <Breadcrumb
+        path={path}
+        rootTitle={root?.absoluteRoot}
+        onNavigate={onNavigate}
+        maxVisibleSegments={breadcrumbCap}
+      />
       <IconButton
         icon={ArrowUp}
         aria-label="Up one level"

@@ -1,3 +1,9 @@
+// Horizontal swipe navigation is deliberately NOT bound in v1 (specification §10 and
+// §16.2 item 4): on iOS Safari and Chrome on Android a horizontal drag from near the
+// screen edge is the browser's back/forward gesture, and intercepting it either breaks
+// navigation or produces a 50/50 race depending on where the drag started. Prev/next are
+// reachable from the controls overlay (tap) and from the arrow keys. Revisit only with
+// an explicit product decision.
 import { useEffect, useLayoutEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { useAppActions, useAppState } from '../../state/AppStateProvider';

@@ -1,5 +1,6 @@
 .tile {
   min-width: 0;
+  touch-action: manipulation;
 }
 .media {
   aspect-ratio: 1 / 1;

@@ -10,14 +10,18 @@ export interface MatchMediaController {
 }
 
 type Listener = (e: MediaQueryListEvent) => void;
+type QueryResolver = (query: string) => boolean | undefined;
 
 /** Installs a controllable window.matchMedia. Queries not listed in `initial` start as false. */
-export function installMatchMedia(initial: Record<string, boolean> = {}): MatchMediaController {
+export function installMatchMedia(
+  initial: Record<string, boolean> = {},
+  resolve?: QueryResolver,
+): MatchMediaController {
   const entries = new Map<string, { matches: boolean; listeners: Set<Listener> }>();
   const entry = (query: string) => {
     let e = entries.get(query);
     if (!e) {
-      e = { matches: initial[query] ?? false, listeners: new Set() };
+      e = { matches: initial[query] ?? resolve?.(query) ?? false, listeners: new Set() };
       entries.set(query, e);
     }
     return e;
@@ -60,6 +64,48 @@ export function installMatchMedia(initial: Record<string, boolean> = {}): MatchM
     dispose() {
       if (original) Object.defineProperty(window, 'matchMedia', original);
       else delete (window as { matchMedia?: unknown }).matchMedia;
+    },
+  };
+}
+
+export interface ViewportOptions {
+  width: number;
+  height?: number;
+  hover?: 'hover' | 'none';
+  pointer?: 'fine' | 'coarse';
+  reducedMotion?: boolean;
+}
+
+/** Installs a matchMedia stub backed by a synthetic viewport. */
+export function installViewport(
+  opts: ViewportOptions,
+): MatchMediaController & { setViewport(next: Partial<ViewportOptions>): void } {
+  let viewport = { ...opts };
+  const queries = new Set<string>();
+  const matches = (query: string): boolean | undefined => {
+    queries.add(query);
+    const width = query.match(/\((min|max)-width:\s*(\d+(?:\.\d+)?)px\)/);
+    if (width) {
+      const value = Number(width[2]);
+      return width[1] === 'min' ? viewport.width >= value : viewport.width <= value;
+    }
+    if (query.includes('(hover: hover)')) return (viewport.hover ?? 'none') === 'hover';
+    if (query.includes('(hover: none)')) return (viewport.hover ?? 'none') === 'none';
+    if (query.includes('(pointer: fine)')) return (viewport.pointer ?? 'fine') === 'fine';
+    if (query.includes('(pointer: coarse)')) return (viewport.pointer ?? 'fine') === 'coarse';
+    if (query.includes('(prefers-reduced-motion: reduce)')) return viewport.reducedMotion ?? false;
+    return undefined;
+  };
+  const controller = installMatchMedia({}, matches);
+  return {
+    ...controller,
+    setViewport(next) {
+      viewport = { ...viewport, ...next };
+      for (const query of queries) {
+        const nextMatches = matches(query);
+        if (nextMatches !== undefined && window.matchMedia(query).matches !== nextMatches)
+          controller.setMatches(query, nextMatches);
+      }
     },
   };
 }
