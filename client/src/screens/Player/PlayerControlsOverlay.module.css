@@ -67,3 +67,15 @@
     transition-duration: 0s;
   }
 }
+
+@media (forced-colors: active) {
+  .pill {
+    background: Canvas;
+    border: 1px solid ButtonText;
+    box-shadow: none;
+  }
+
+  .button {
+    border: 1px solid ButtonText;
+  }
+}

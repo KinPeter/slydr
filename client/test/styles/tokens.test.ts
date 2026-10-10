@@ -177,6 +177,19 @@ function compositeOverWhite(rgba: string): string {
   return `#${channel(r)}${channel(g)}${channel(b)}`;
 }
 
+function compositeOver(rgba: string, backdrop: string): string {
+  const { r, g, b, a } = parseRgba(rgba);
+  const n = parseInt(backdrop.slice(1), 16);
+  const br = (n >> 16) & 0xff;
+  const bg = (n >> 8) & 0xff;
+  const bb = n & 0xff;
+  const channel = (fg: number, base: number): string =>
+    Math.round(a * fg + (1 - a) * base)
+      .toString(16)
+      .padStart(2, '0');
+  return `#${channel(r, br)}${channel(g, bg)}${channel(b, bb)}`;
+}
+
 function expectOverlayContrast(theme: Map<string, string>, fgVar: string, min = 4.5): void {
   const composited = compositeOverWhite(lookup(theme, '--overlay-bg'));
   expect(contrast(lookup(theme, fgVar), composited)).toBeGreaterThanOrEqual(min);
@@ -374,6 +387,14 @@ describe('tokens.css — WCAG 2.1 AA contrast (NFR-6)', () => {
     expectNonTextContrast(themeBlocks().baseline, '--focus-ring', '--bg');
   });
 
+  it('light: focus ring and accent meet the additional UI contrast pairs', () => {
+    const light = themeBlocks().baseline;
+    expectNonTextContrast(light, '--focus-ring', '--bg-elevated');
+    expectNonTextContrast(light, '--focus-ring', '--bg-sunken');
+    expectNonTextContrast(light, '--accent', '--bg');
+    expectNonTextContrast(light, '--accent', '--bg-elevated');
+  });
+
   it('light: --overlay-fg and --overlay-fg-muted on --overlay-bg composited over pure white meet 4.5:1', () => {
     const light = themeBlocks().baseline;
     expectOverlayContrast(light, '--overlay-fg');
@@ -431,9 +452,26 @@ describe('tokens.css — WCAG 2.1 AA contrast (NFR-6)', () => {
     expectNonTextContrast(darkTheme(), '--focus-ring', '--bg');
   });
 
+  it('dark: focus ring on accent and accent UI pairs meet 3:1', () => {
+    const dark = darkTheme();
+    expectNonTextContrast(dark, '--focus-ring', '--bg-elevated');
+    expectNonTextContrast(dark, '--focus-ring', '--bg-sunken');
+    expectNonTextContrast(dark, '--focus-ring', '--accent');
+    expectNonTextContrast(dark, '--accent', '--bg');
+    expectNonTextContrast(dark, '--accent', '--bg-elevated');
+  });
+
   it('dark: --overlay-fg and --overlay-fg-muted on --overlay-bg composited over pure white meet 4.5:1', () => {
     const dark = darkTheme();
     expectOverlayContrast(dark, '--overlay-fg');
     expectOverlayContrast(dark, '--overlay-fg-muted');
+  });
+
+  it('overlay foreground remains readable over a mid-grey photo', () => {
+    for (const theme of [themeBlocks().baseline, darkTheme()]) {
+      const backdrop = compositeOver(lookup(theme, '--overlay-bg'), '#808080');
+      expect(contrast(lookup(theme, '--overlay-fg'), backdrop)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(lookup(theme, '--overlay-fg-muted'), backdrop)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });

@@ -37,7 +37,7 @@ export function Config() {
     actions.startPlayer();
   }
   return (
-    <main className={styles.screen}>
+    <div className={styles.screen}>
       <div className={styles.column}>
         <ConfigHeader onBack={actions.goToExplorer} />
         {state.notice !== null && (
@@ -72,6 +72,6 @@ export function Config() {
         </div>
       </div>
       <ConfigFooter canPlay={canPlay} onPlay={play} />
-    </main>
+    </div>
   );
 }

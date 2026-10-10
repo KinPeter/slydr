@@ -38,6 +38,7 @@ export function EntryList({
       aria-label={FOLDER_CONTENTS}
       aria-activedescendant={activeIndex >= 0 ? `slydr-entry-${activeIndex}` : undefined}
       data-virtualized="false"
+      data-focus-target="entries"
       onKeyDown={onKeyDown}
       onClick={(event) => {
         const i = indexOf(event);

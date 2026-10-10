@@ -186,6 +186,23 @@ a {
     0 0 0 4px var(--focus-ring);
 }
 
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    box-shadow: none;
+  }
+  button[aria-pressed='true'] {
+    border: 2px solid Highlight;
+  }
+  [role='option'][aria-selected='true'],
+  [role='gridcell'][aria-selected='true'] {
+    outline: 2px solid Highlight;
+  }
+  input[type='range'] {
+    accent-color: Highlight;
+  }
+}
+
 /* ---- Screen-reader-only text ------------------------------------------ */
 
 .sr-only {

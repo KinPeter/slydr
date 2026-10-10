@@ -34,6 +34,7 @@ export function VirtualEntryList({
       aria-label={FOLDER_CONTENTS}
       aria-activedescendant={h.activeIndex >= 0 ? `slydr-entry-${h.activeIndex}` : undefined}
       data-virtualized="true"
+      data-focus-target="entries"
       className={styles.virtualList}
       style={{ height: virtualizer.getTotalSize() }}
       onKeyDown={h.onKeyDown}

@@ -53,6 +53,7 @@ export function Explorer() {
     listing.data?.parentPath ?? null,
   );
   const { error, requestedPath, fallbackToRoot } = listing;
+  const retryPending = useRef(false);
   const loadedPath = listing.data?.path;
   const virtual = useVirtualizationMode(
     listing.data?.path ?? state.explorer.path,
@@ -93,9 +94,25 @@ export function Explorer() {
       scrollEl.scrollTop = 0;
     if (path !== undefined) previousPath.current = path;
   }, [listing.data?.path, scrollEl]);
+  useEffect(() => {
+    if (!retryPending.current || listing.loading) return;
+    const target = listing.error ? '[data-focus-target="retry"]' : '[data-focus-target="entries"]';
+    const frame = window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(target)?.focus({ preventScroll: true });
+      retryPending.current = false;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [listing.error, listing.loading, listing.data]);
   const folderName =
     listing.data?.name || (listing.data?.path === '' ? root?.name : undefined) || '';
   const empty = listing.data?.entries.length === 0 && !listing.loading && !listing.error;
+  const [announcedCount, setAnnouncedCount] = useState('');
+  useEffect(() => {
+    const count = listing.data?.counts.images;
+    const text = count === undefined ? '' : `${count} image${count === 1 ? '' : 's'}`;
+    const timer = window.setTimeout(() => setAnnouncedCount(text), 300);
+    return () => window.clearTimeout(timer);
+  }, [listing.data?.counts.images]);
   const restoreDismiss = () => setRestoreNotice(false);
   const renderBody = () => {
     if (!listing.data && listing.loading && state.explorer.viewMode === 'grid')
@@ -162,35 +179,40 @@ export function Explorer() {
   };
   return (
     <ExplorerScrollContext.Provider value={scrollEl}>
-      <main className={styles.screen}>
-        <header>
-          <h1 className="sr-only">{EXPLORER_HEADING}</h1>
-          <ExplorerHeader
-            data={listing.data}
-            requestedPath={listing.requestedPath}
-            root={root}
-            viewMode={state.explorer.viewMode}
-            showHidden={state.explorer.showHidden}
-            onNavigate={listing.navigate}
-            onUp={() =>
-              listing.data?.parentPath !== null &&
-              listing.data?.parentPath !== undefined &&
-              listing.navigate(listing.data.parentPath)
-            }
-            onViewMode={actions.setViewMode}
-            onShowHidden={actions.setShowHidden}
-          />
-        </header>
+      <div className={styles.screen}>
+        <h1 className="sr-only">{EXPLORER_HEADING}</h1>
+        <ExplorerHeader
+          data={listing.data}
+          requestedPath={listing.requestedPath}
+          root={root}
+          viewMode={state.explorer.viewMode}
+          showHidden={state.explorer.showHidden}
+          onNavigate={listing.navigate}
+          onUp={() =>
+            listing.data?.parentPath !== null &&
+            listing.data?.parentPath !== undefined &&
+            listing.navigate(listing.data.parentPath)
+          }
+          onViewMode={actions.setViewMode}
+          onShowHidden={actions.setShowHidden}
+        />
         {listing.loading && listing.data && <div className={styles.progress} aria-hidden="true" />}
         <ExplorerNotices
           restore={restoreNotice}
           dismissRestore={restoreDismiss}
           error={listing.error ? errorText(listing.error.code) : null}
-          retry={listing.reload}
+          retry={() => {
+            retryPending.current = true;
+            listing.reload();
+          }}
+          retryFocusTarget="retry"
           truncated={listing.data?.truncated === true}
         />
         <div className={styles.body} data-explorer-scroll ref={(node) => setScrollEl(node)}>
           {renderBody()}
+        </div>
+        <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {announcedCount}
         </div>
         <ExplorerFooter
           name={folderName}
@@ -199,7 +221,7 @@ export function Explorer() {
             listing.data && actions.selectCurrentFolder(listing.data.path, folderName)
           }
         />
-      </main>
+      </div>
     </ExplorerScrollContext.Provider>
   );
 }

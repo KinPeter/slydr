@@ -6,12 +6,14 @@ export function ExplorerNotices({
   dismissRestore,
   error,
   retry,
+  retryFocusTarget,
   truncated,
 }: {
   restore: boolean;
   dismissRestore: () => void;
   error: string | null;
   retry: () => void;
+  retryFocusTarget?: string;
   truncated: boolean;
 }) {
   return (
@@ -22,7 +24,10 @@ export function ExplorerNotices({
         </Banner>
       )}
       {error && (
-        <Banner variant="error" action={{ label: RETRY, onClick: retry }}>
+        <Banner
+          variant="error"
+          action={{ label: RETRY, onClick: retry, dataFocusTarget: retryFocusTarget }}
+        >
           {error}
         </Banner>
       )}

@@ -1,7 +1,6 @@
 .virtualList {
   position: relative;
   width: 100%;
-  outline: none;
 }
 .virtualRow {
   position: absolute;

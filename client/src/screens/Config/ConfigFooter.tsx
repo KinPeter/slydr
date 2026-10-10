@@ -14,6 +14,7 @@ export function ConfigFooter({ canPlay, onPlay }: { canPlay: boolean; onPlay: ()
           disabled={!canPlay}
           aria-describedby="cfg-status"
           onClick={onPlay}
+          data-focus-target="play"
         >
           {PLAY_SLIDESHOW}
         </Button>

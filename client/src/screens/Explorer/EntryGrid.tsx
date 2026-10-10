@@ -45,6 +45,7 @@ export function EntryGrid({
       aria-activedescendant={activeIndex >= 0 ? `slydr-entry-${activeIndex}` : undefined}
       data-tile-min={min}
       data-virtualized="false"
+      data-focus-target="entries"
       onKeyDown={onKeyDown}
       onClick={(e) => {
         const i = indexOf(e);

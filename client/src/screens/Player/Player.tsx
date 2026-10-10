@@ -4,7 +4,7 @@
 // navigation or produces a 50/50 race depending on where the drag started. Prev/next are
 // reachable from the controls overlay (tap) and from the arrow keys. Revisit only with
 // an explicit product decision.
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useAppActions, useAppState } from '../../state/AppStateProvider';
 import { PlayerStage } from './PlayerStage';
@@ -28,6 +28,10 @@ export function Player() {
   const engine = usePlayerEngine({ playlist, config: app.config, onExit: exitPlayer });
   const { releasePrevious } = engine;
   const { animations } = useEffectiveAnimations(app.config);
+  const playerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    playerRef.current?.focus({ preventScroll: true });
+  }, []);
   const idle = useIdleReveal(2000, { hold: engine.state.status === 'paused' });
   const { visible: controlsVisible, reveal } = idle;
   usePlayerKeyboard({ controls: engine.controls, reveal });
@@ -51,6 +55,9 @@ export function Player() {
   return (
     <div
       className={styles.player}
+      ref={playerRef}
+      tabIndex={-1}
+      data-focus-target="player"
       role="region"
       aria-label="Slide show"
       data-status={engine.state.status}
@@ -68,6 +75,7 @@ export function Player() {
         } as CSSProperties
       }
     >
+      <h1 className="sr-only">Slide show</h1>
       <PlayerStage
         state={engine.state}
         controls={engine.controls}

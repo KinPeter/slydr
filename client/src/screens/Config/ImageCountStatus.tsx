@@ -50,7 +50,13 @@ export function ImageCountStatus({
       </>
     );
   return (
-    <div id="cfg-status" role="status" aria-live="polite" className={styles.status}>
+    <div
+      id="cfg-status"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className={styles.status}
+    >
       {content}
     </div>
   );

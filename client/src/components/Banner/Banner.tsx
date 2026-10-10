@@ -15,6 +15,7 @@ export interface BannerAction {
   onClick: () => void;
   /** Disables the button and shows a spinner, e.g. while a retry is in flight. */
   loading?: boolean;
+  dataFocusTarget?: string;
 }
 
 export interface BannerProps extends Omit<
@@ -83,7 +84,13 @@ export function Banner({
       </div>
       {action !== undefined && (
         <span className={styles.action}>
-          <Button variant="secondary" size="md" loading={action.loading} onClick={action.onClick}>
+          <Button
+            variant="secondary"
+            size="md"
+            loading={action.loading}
+            onClick={action.onClick}
+            data-focus-target={action.dataFocusTarget}
+          >
             {action.label}
           </Button>
         </span>

@@ -43,6 +43,7 @@ export function VirtualEntryGrid({
       aria-rowcount={grid.rowCount}
       aria-activedescendant={h.activeIndex >= 0 ? `slydr-entry-${h.activeIndex}` : undefined}
       data-virtualized="true"
+      data-focus-target="entries"
       data-tile-min={grid.tileMin}
       className={styles.virtualGrid}
       style={{ height: grid.virtualizer.getTotalSize() }}
