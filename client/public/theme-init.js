@@ -13,7 +13,8 @@
  *   data-theme="light" -> force light, even on a dark OS
  *   data-theme="dark"  -> force dark, even on a light OS
  *
- * Keep this logic in sync with client/src/state/theme.ts.
+ * Keep this logic in sync with client/src/state/theme.ts and
+ * client/src/state/storage.ts (the owners of the slydr.theme key).
  */
 (function () {
   'use strict';
