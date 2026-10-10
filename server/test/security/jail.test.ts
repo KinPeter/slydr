@@ -310,7 +310,11 @@ describe('jail — resolveSafe (steps 1-8)', () => {
 
   describe('step 2: length rejection', () => {
     it('accepts a 4096-character path shape', async () => {
-      const longPath = 'a'.repeat(4096);
+      // 4096 chars composed of legal 1-char segments ('a/' x 2048).
+      // A single 4096-char segment would hit ENAMETOOLONG (NAME_MAX) and map to
+      // INVALID_PATH; segmented form yields ENOENT -> NOT_FOUND, proving it
+      // passed the length gate.
+      const longPath = 'a/'.repeat(2048);
       // A 4096-character path that doesn't exist should throw NOT_FOUND, proving it passed the length gate
       const err = await expectResolveSafeError(longPath, 'NOT_FOUND');
       expect(err.status).toBe(404);
@@ -431,10 +435,10 @@ describe('jail — resolveSafe (steps 1-8)', () => {
       // Create sibling with similar name
       const evil = path.join(path.dirname(rootDir), 'rootEvil');
       await fs.mkdir(evil, { recursive: true });
+      const evilLink = path.join(rootDir, 'evil-link');
 
       try {
         // Create a symlink to the evil directory
-        const evilLink = path.join(rootDir, 'evil-link');
         const created = await trySymlink(evil, evilLink, 'dir');
 
         if (!created) {
@@ -442,9 +446,9 @@ describe('jail — resolveSafe (steps 1-8)', () => {
           return;
         }
 
-        const err = await expect(resolveSafe('evil-link')).rejects.toThrow(ApiError);
-        expect((err as any).thrownError?.code).toBe('OUTSIDE_ROOT');
+        await expectResolveSafeError('evil-link', 'OUTSIDE_ROOT');
       } finally {
+        await fs.rm(evilLink, { force: true });
         await fs.rm(evil, { recursive: true, force: true });
       }
     });

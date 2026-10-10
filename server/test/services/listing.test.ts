@@ -221,15 +221,20 @@ describe('compareEntries', () => {
 
 describe('listDirectory', () => {
   let tempBase: string;
+  let outsideJailDir: string;
 
   beforeAll(async () => {
     tempBase = await makeTempBase('slydr-listing-');
+    // Truly outside the jail root (sibling temp dir, not under tempBase),
+    // so a symlink to it must be treated as escaping the jail.
+    outsideJailDir = await makeTempBase('slydr-listing-outside-');
     setJailRoot(tempBase);
   });
 
   afterAll(async () => {
     resetJailRootForTests();
     await removeTree(tempBase);
+    await removeTree(outsideJailDir);
   });
 
   describe('basic listing structure', () => {
@@ -269,9 +274,8 @@ describe('listDirectory', () => {
       await trySymlink(path.join(fixtureDir, 'IMG_2.jpg'), linkImgJpg, 'file');
       await trySymlink(path.join(fixtureDir, 'notes.txt'), linkDataJpg, 'file');
 
-      // Outside link (need an outside directory)
-      const outsideDir = path.join(tempBase, 'outside');
-      await fs.mkdir(outsideDir);
+      // Outside link (must point truly outside the jail root, i.e. outside tempBase)
+      const outsideDir = outsideJailDir;
       const linkOutside = path.join(fixtureDir, 'link-outside');
       await trySymlink(outsideDir, linkOutside, 'dir');
 
