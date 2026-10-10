@@ -1,78 +1,119 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import App from '../src/App';
+import App, { App as NamedApp, AppScreens } from '../src/App';
+import { installMockStorage } from './helpers/storageMock';
 
-function mockFetchNever() {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(() => new Promise(() => {})),
-  );
-}
-
+const disposers: Array<() => void> = [];
 afterEach(() => {
-  vi.unstubAllGlobals();
+  while (disposers.length > 0) {
+    disposers.pop()?.();
+  }
+  const element = document.documentElement as unknown as Record<string, unknown>;
+  if ('requestFullscreen' in element) {
+    delete element['requestFullscreen'];
+  }
 });
 
-describe('App (scaffold shell)', () => {
-  it('renders the Slydr heading', () => {
-    mockFetchNever();
-    render(<App />);
-    expect(screen.getByRole('heading', { name: 'Slydr' })).toBeInTheDocument();
+function renderApp(): void {
+  disposers.push(installMockStorage().dispose);
+  render(<App />);
+}
+
+function clickButton(name: string): void {
+  fireEvent.click(screen.getByRole('button', { name }));
+}
+
+function headings(): string[] {
+  return screen.getAllByRole('heading').map((h) => h.textContent ?? '');
+}
+
+describe('App view switching', () => {
+  it('renders the explorer placeholder first', () => {
+    renderApp();
+    expect(screen.getByRole('heading', { name: 'Explorer (placeholder)' })).toBeInTheDocument();
   });
 
-  it('shows "Checking the local API…" before the health request resolves', () => {
-    mockFetchNever();
-    render(<App />);
-    expect(screen.getByTestId('api-status')).toHaveTextContent('Checking the local API…');
+  it('shows the config placeholder after Select this folder', () => {
+    renderApp();
+    clickButton('Select this folder');
+    expect(
+      screen.getByRole('heading', { name: 'Configuration (placeholder)' }),
+    ).toBeInTheDocument();
   });
 
-  it('shows the version from /api/health once the request resolves', async () => {
-    const fetchMock = vi.fn((_url: unknown, _init?: unknown) =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ status: 'ok', version: '1.2.3' }),
-      }),
-    );
-    vi.stubGlobal('fetch', fetchMock);
-    render(<App />);
-    expect(await screen.findByText('API reachable (version 1.2.3)')).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/health');
+  it('selects the current explorer path, not any other value', () => {
+    renderApp();
+    clickButton('Go deeper');
+    expect(screen.getByTestId('explorer-path')).toHaveTextContent('Pictures');
+    clickButton('Select this folder');
+    expect(screen.getByTestId('config-selection')).toHaveTextContent('Pictures');
+    expect(screen.getByTestId('config-selection-path')).toHaveTextContent('Pictures');
   });
 
-  it('shows "Local API not reachable." when the health request rejects', async () => {
-    const fetchMock = vi.fn((_url: unknown, _init?: unknown) =>
-      Promise.reject(new TypeError('fetch failed')),
-    );
-    vi.stubGlobal('fetch', fetchMock);
-    render(<App />);
-    expect(await screen.findByText('Local API not reachable.')).toBeInTheDocument();
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/health');
+  it('returns to the explorer placeholder with the same path after Back to file explorer', () => {
+    renderApp();
+    clickButton('Go deeper');
+    clickButton('Select this folder');
+    clickButton('Back to file explorer');
+    expect(screen.getByRole('heading', { name: 'Explorer (placeholder)' })).toBeInTheDocument();
+    expect(screen.getByTestId('explorer-path')).toHaveTextContent('Pictures');
   });
 
-  it('aborts the in-flight health request on unmount without logging an unhandled rejection', async () => {
-    let rejectPending!: (reason?: unknown) => void;
-    const pending = new Promise((_resolve, reject) => {
-      rejectPending = reject;
+  it('shows the player placeholder after Play slide show and returns to config on Stop', () => {
+    renderApp();
+    clickButton('Select this folder');
+    clickButton('Play slide show');
+    expect(screen.getByRole('heading', { name: 'Player (placeholder)' })).toBeInTheDocument();
+    clickButton('Stop');
+    expect(
+      screen.getByRole('heading', { name: 'Configuration (placeholder)' }),
+    ).toBeInTheDocument();
+  });
+
+  it('renders exactly one screen at any time', () => {
+    renderApp();
+    expect(headings()).toEqual(['Explorer (placeholder)']);
+    clickButton('Select this folder');
+    expect(headings()).toEqual(['Configuration (placeholder)']);
+    clickButton('Play slide show');
+    expect(headings()).toEqual(['Player (placeholder)']);
+    clickButton('Stop');
+    expect(headings()).toEqual(['Configuration (placeholder)']);
+    clickButton('Back to file explorer');
+    expect(headings()).toEqual(['Explorer (placeholder)']);
+  });
+
+  it('does not touch window.history or add a popstate listener', () => {
+    const pushSpy = vi.spyOn(window.history, 'pushState');
+    const replaceSpy = vi.spyOn(window.history, 'replaceState');
+    const addSpy = vi.spyOn(window, 'addEventListener');
+    renderApp();
+    clickButton('Select this folder');
+    clickButton('Play slide show');
+    clickButton('Stop');
+    clickButton('Back to file explorer');
+    expect(pushSpy).not.toHaveBeenCalled();
+    expect(replaceSpy).not.toHaveBeenCalled();
+    expect(addSpy.mock.calls.filter((call) => call[0] === 'popstate')).toHaveLength(0);
+  });
+
+  it('does not call requestFullscreen', () => {
+    const fullscreen = vi.fn(() => Promise.resolve());
+    Object.defineProperty(document.documentElement, 'requestFullscreen', {
+      configurable: true,
+      writable: true,
+      value: fullscreen,
     });
-    // App catches AbortError itself, but the raw promise still rejects,
-    // so attach a no-op handler to avoid an unhandled rejection in jsdom.
-    pending.catch(() => {});
-    let observedSignal: AbortSignal | undefined;
-    const fetchMock = vi.fn((_url: unknown, init?: RequestInit) => {
-      observedSignal = init?.signal as AbortSignal | undefined;
-      observedSignal?.addEventListener('abort', () => {
-        rejectPending(new DOMException('Aborted', 'AbortError'));
-      });
-      return pending;
-    });
-    vi.stubGlobal('fetch', fetchMock);
-    const { unmount } = render(<App />);
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/health');
-    unmount();
-    expect(observedSignal?.aborted).toBe(true);
-    // Let the rejection propagate through App's catch handler.
-    await Promise.resolve();
-    await Promise.resolve();
+    renderApp();
+    clickButton('Select this folder');
+    clickButton('Play slide show');
+    expect(screen.getByRole('heading', { name: 'Player (placeholder)' })).toBeInTheDocument();
+    expect(fullscreen).not.toHaveBeenCalled();
+  });
+
+  it('is importable as the default export, as T019 main.tsx does', () => {
+    expect(typeof App).toBe('function');
+    expect(NamedApp).toBe(App);
+    expect(typeof AppScreens).toBe('function');
   });
 });
