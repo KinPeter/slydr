@@ -9,6 +9,7 @@
   },
   "include": [
     "vitest.config.ts",
+    "scripts/docs/vitest.config.ts",
     "shared/vitest.config.ts",
     "server/vitest.config.ts",
     "client/vitest.config.ts"

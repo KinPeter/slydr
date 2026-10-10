@@ -58,6 +58,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: README drift check
+        run: npm run docs:check
+
       - name: Build
         run: npm run build
 
