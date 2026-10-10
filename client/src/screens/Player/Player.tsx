@@ -9,6 +9,8 @@ import { useWakeLock } from './useWakeLock';
 import styles from './Player.module.css';
 import { transitionDuration } from './motion';
 import { useEffectiveAnimations } from './useEffectiveAnimations';
+import { PlayerControlsOverlay } from './PlayerControlsOverlay';
+import { useIdleReveal } from './useIdleReveal';
 
 export function Player() {
   const app = useAppState();
@@ -17,6 +19,8 @@ export function Player() {
   const engine = usePlayerEngine({ playlist, config: app.config, onExit: exitPlayer });
   const { releasePrevious } = engine;
   const { animations } = useEffectiveAnimations(app.config);
+  const idle = useIdleReveal(2000, { hold: engine.state.status === 'paused' });
+  const { visible: controlsVisible, reveal } = idle;
   useLayoutEffect(() => {
     if (!animations && engine.state.previous) releasePrevious(engine.state.previous.key);
   }, [animations, engine.state.previous, releasePrevious]);
@@ -26,6 +30,13 @@ export function Player() {
     document.body.classList.add('player-open');
     return () => document.body.classList.remove('player-open');
   }, []);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!controlsVisible && !['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) reveal();
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [controlsVisible, reveal]);
   return (
     <div
       className={styles.player}
@@ -33,6 +44,7 @@ export function Player() {
       aria-label="Slide show"
       data-status={engine.state.status}
       data-fullscreen={engine.state.isFullscreen ? 'true' : 'false'}
+      data-chrome={controlsVisible ? 'visible' : 'hidden'}
       data-testid="player"
       style={
         {
@@ -54,6 +66,24 @@ export function Player() {
         registerLayer={engine.registerLayer}
         reportLoadError={engine.reportLoadError}
         reportLoadSuccess={engine.reportLoadSuccess}
+        overlay={
+          <PlayerControlsOverlay
+            ref={(element) => {
+              idle.overlayRef.current = element;
+            }}
+            onPrev={engine.controls.previous}
+            onNext={engine.controls.next}
+            onTogglePause={engine.controls.togglePause}
+            onToggleFullscreen={engine.controls.toggleFullscreen}
+            onStop={engine.controls.stop}
+            paused={engine.state.status === 'paused'}
+            fullscreen={engine.state.isFullscreen}
+            index={engine.state.counter.index}
+            total={engine.state.counter.total}
+            visible={controlsVisible}
+            holdProps={idle.holdProps}
+          />
+        }
         background={
           <PlayerBackground
             fillEmptySpace={app.config.fillEmptySpace}

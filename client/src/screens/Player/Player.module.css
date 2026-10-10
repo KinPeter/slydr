@@ -11,6 +11,12 @@
   -webkit-user-select: none;
 }
 
+@media (hover: hover) {
+  .player[data-chrome='hidden'] {
+    cursor: none;
+  }
+}
+
 .layerBackground,
 .layerImages,
 .layerOverlay {

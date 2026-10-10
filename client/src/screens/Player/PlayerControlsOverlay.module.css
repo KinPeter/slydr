@@ -1,0 +1,69 @@
+.pill {
+  --button-fg: var(--overlay-fg);
+  --button-hover-bg: var(--overlay-bg);
+  position: absolute;
+  left: 50%;
+  bottom: max(var(--space-6), env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--overlay-bg);
+  color: var(--overlay-fg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-1);
+  max-width: calc(100% - 2 * var(--space-4));
+  transition:
+    opacity var(--dur-base) var(--ease-standard),
+    visibility 0s linear var(--dur-base);
+}
+.pill[data-visible='false'] {
+  opacity: 0;
+  visibility: hidden;
+}
+.pill[data-visible='true'] {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s, 0s;
+}
+.counter {
+  color: var(--overlay-fg-muted);
+  font-variant-numeric: tabular-nums;
+  padding-inline: var(--space-2);
+}
+.button {
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  color: var(--overlay-fg);
+}
+.button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .button {
+    min-width: var(--target-min-coarse);
+    min-height: var(--target-min-coarse);
+  }
+}
+@media (max-width: 767.98px) {
+  .pill {
+    gap: var(--space-1);
+    padding-inline: var(--space-2);
+  }
+  .button {
+    min-width: var(--target-min-coarse);
+    min-height: var(--target-min-coarse);
+  }
+  .counter {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill {
+    transition-duration: 0s;
+  }
+}
