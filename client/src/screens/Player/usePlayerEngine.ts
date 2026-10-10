@@ -134,7 +134,7 @@ export function usePlayerEngine({
   const beginTimer = useCallback(
     (resetRemaining = true) => {
       const r = ref.current;
-      if (r.stopped || refState.current?.status !== 'playing') return;
+      if (r.stopped) return;
       r.started = performance.now();
       if (resetRemaining) r.remaining = durationMs;
       r.timer = setTimeout(() => {

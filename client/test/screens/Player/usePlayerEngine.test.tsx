@@ -21,6 +21,16 @@ const playlist: ImageItem[] = [
 afterEach(() => vi.useRealTimers());
 
 describe('usePlayerEngine scheduling and failures', () => {
+  it('starts the initial timer so a non-looping single-image show exits', () => {
+    vi.useFakeTimers();
+    const onExit = vi.fn();
+    renderHook(() => usePlayerEngine({ playlist: [playlist[0]!], config, onExit }));
+
+    act(() => vi.advanceTimersByTime(config.durationSeconds * 1000));
+
+    expect(onExit).toHaveBeenCalledWith({});
+  });
+
   it('resumes with the paused remainder instead of resetting the duration', () => {
     vi.useFakeTimers();
     const onExit = vi.fn();
