@@ -54,8 +54,8 @@ what it is given and **must never re-sort**.
   build recursion into `listDirectory`.
 - Thumbnails (`/api/thumb`) and original streaming (`/api/image`) — epics E7 and E8.
 - Client-side rendering, virtualization and the truncation notice — epics E11–E13.
-- The shared repository-wide fixture generator script — **T037**. This ticket builds its own
-  temporary fixtures with the `makeTempBase` helper it creates itself (§6).
+- This ticket builds its own temporary fixtures with the `makeTempBase` helper it creates
+  itself (§6).
 
 ## 3. Prerequisites and assumed state
 
@@ -631,8 +631,7 @@ export function createTestLogger(): { logger: Logger; events: TestLogEvent[] };
 In `beforeAll` create the fixture with `makeTempBase('slydr-listing-')` (already
 realpath'd, so containment checks do not fail for the wrong reason), call
 `setJailRoot(root)`; in `afterAll` call `resetJailRootForTests()` and `removeTree(base)`.
-Tests never set `SLYDR_ROOT`. **The shared repository-wide fixture generator script is owned
-by T037; do not depend on it.**
+Tests never set `SLYDR_ROOT`.
 
 Any case whose fixture could not be created (`trySymlink` returned `false`) must **skip
 gracefully** (`ctx.skip()`), never fail — symlink creation requires elevation or Developer

@@ -760,9 +760,8 @@ Dependency-ordered. The next agent should split these into individually shippabl
 | E19 | Player keyboard shortcuts including the `fullscreenchange` Escape handling | E15, E18 | §9.6 |
 | E20 | Responsive pass across all three screens at every breakpoint | E11–E19 | §10 |
 | E21 | Accessibility pass: contrast, focus order, labels, live regions, keyboard traversal | E11–E19 | NFR-6 |
-| E22 | Test suites: unit, API, component, fixture generator | E5–E19 | §12 |
+| E22 | Test suites: unit, API and component | E5–E19 | §12 |
 | E23 | Production serving: static hosting of `client/dist`, `npm start`, browser auto-open, CSP headers | E3, E9 | §2.2, §3.4 |
-| E24 | Cross-platform verification on Windows/macOS/Linux in CI, including the `sharp` prebuilt check | E22, E23 | NFR-1, §12.5 |
 | E25 | Documentation: README per §13.3 | E23 | §13.3 |
 
 ---

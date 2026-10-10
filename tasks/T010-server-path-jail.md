@@ -51,8 +51,8 @@ verbatim and covers them with the full test matrix of §12.1.
 - The `/api/fs/root` and `/api/fs/list` routes — **T012**.
 - The recursive image scan (`/api/fs/images`), original streaming (`/api/image`) and
   thumbnails (`/api/thumb`) — later tickets in epics E6–E8. They all consume `resolveSafe`.
-- The repository-wide fixture-tree generator script — **T037**. This ticket builds its own
-  temporary fixtures inline with `fs.mkdtemp`.
+- Shared fixture infrastructure. This ticket builds its own temporary fixtures inline with
+  `fs.mkdtemp`.
 - End-to-end (e2e) testing is out of scope.
 
 ## 3. Prerequisites and assumed state
@@ -452,8 +452,7 @@ allowed), the root itself, and a non-existent path." The matrix below spells tha
 individual cases plus the cross-platform additions.
 
 All tests live in **`server/test/security/jail.test.ts`** unless stated. Build the fixture
-tree inline — **T037 owns the shared repository-wide fixture generator script; do not wait
-for it and do not pre-empt it.**
+tree inline with the helpers defined by this ticket.
 
 ### Fixture setup
 

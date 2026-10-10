@@ -32,7 +32,8 @@ This ticket adds windowing with `@tanstack/react-virtual` (the library fixed by 
 ### Out of scope
 
 - **Server-side listing speed.** The 500 ms warm-cache target for a 2,000-entry listing belongs to the listing service and route (T011, T012). This ticket *measures* it and reports a failure against those tickets; it does not change server code.
-- **The fixture generator.** T037 owns the reusable test-fixture generator. This ticket uses it if it is already merged and otherwise uses the one-off script in §4.10, which is not committed.
+- **Reusable fixture infrastructure.** This ticket uses the one-off measurement script in §4.10,
+  which is not committed.
 - **Responsive CSS for the header, footer and configuration column — T035.** The grid-column maths (`gridMetrics.ts`) is owned by T027 and imported by this ticket and by T035; this ticket restyles nothing.
 - **The thumbnail queue itself — T027.** `thumbnailQueue.ts` and `useThumbnail.ts` are consumed unchanged.
 - **Changing the thumbnail cache, the thumbnail size or the cap.** `THUMB_SIZE = 256` and `MAX_IN_FLIGHT = 6` stay as T027 defined them.
@@ -482,7 +483,10 @@ No change to `thumbnailQueue.ts`, `useThumbnail.ts` or `Thumbnail.tsx` is expect
 
 Run this once before opening the PR and paste the numbers in the PR description. It needs a production-like build (`npm run build` then the server serving `client/dist`), because `vite dev` adds React development overhead that distorts frame times.
 
-**Step 1 — create the fixtures.** If T037's generator is already merged, use it to create one folder of 2,000 and one of 10,000 small image files plus some subfolders and non-image files (run its `--help` to find the folder-size options). Otherwise save the script below *outside the repository* (for example `%TEMP%\make-virt-fixture.mjs`, `$TMPDIR/make-virt-fixture.mjs`) and run it with `node`. It writes under the home folder because that is the server's jail root. It is cross-platform and uses a 1x1 PNG so thumbnails decode.
+**Step 1 — create the fixtures.** Save the script below *outside the repository* (for example
+`%TEMP%\make-virt-fixture.mjs`, `$TMPDIR/make-virt-fixture.mjs`) and run it with `node`. It
+writes under the home folder because that is the server's jail root. It is cross-platform and
+uses a 1x1 PNG so thumbnails decode.
 
 ```js
 import { mkdirSync, writeFileSync } from 'node:fs';

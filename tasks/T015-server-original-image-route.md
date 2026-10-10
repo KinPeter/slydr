@@ -66,8 +66,7 @@ definition of "stream a file and map the outcome").
 - Compression (`Content-Encoding`). Images are already compressed; do not add a compression
   middleware for this route.
 - The player's preloading and decode logic (epic E15).
-- The repository-wide fixture generator script — **T037**. This ticket builds its fixture
-  inline in `beforeAll` through `createTestEnv`.
+- This ticket builds its fixture inline in `beforeAll` through `createTestEnv`.
 
 ## 3. Prerequisites and assumed state
 
@@ -532,7 +531,7 @@ guards"). Files: `server/test/routes/image.test.ts` (Supertest),
 
 ### Fixture (`image.test.ts`)
 
-**The shared fixture generator is T037; do not depend on it.** Use `createTestEnv({ prefix:
+Use `createTestEnv({ prefix:
 'slydr-image-', populate })` from `server/test/helpers/testApp.ts` in `beforeAll` and
 `env.cleanup()` in `afterAll`. Never set `SLYDR_ROOT`. `populate(root, outside)` creates:
 

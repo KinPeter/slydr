@@ -58,8 +58,7 @@ through the full middleware stack.
 - `GET /api/fs/images` — **T014** adds that handler to the same router later.
 - `GET /api/image` (T015) and `GET /api/thumb` (T016, T017).
 - The explorer UI that consumes these endpoints (epics E10–E13).
-- The repository-wide fixture-tree generator script — **T037**. This ticket builds its own
-  small temporary fixture through `createTestEnv` and must not wait for, or pre-empt, T037.
+- This ticket builds its own small temporary fixture through `createTestEnv`.
 
 ## 3. Prerequisites and assumed state
 
@@ -534,8 +533,7 @@ extends the options with `deps` (a third argument for `createApp`). Every route 
 
 ### Fixture
 
-**The shared, repository-wide fixture generator script is T037. Do not wait for it and do
-not pre-empt it.** Build a small tree through `populate`:
+Build a small tree through `populate`:
 
 ```ts
 let env: TestEnv;

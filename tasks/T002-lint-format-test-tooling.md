@@ -43,7 +43,6 @@ concatenation of input into a path is a defect everywhere except inside the jail
 
 - Any application, shared-domain or UI code — **T004** onwards.
 - End-to-end (e2e) testing is out of scope.
-- The root Vitest `tooling` project for `scripts/` tests — **T037**.
 - GitHub Actions — **T003**.
 - Type-aware ESLint rules (`recommendedTypeChecked`, `parserOptions.projectService`).
   *Decision (not specified):* use the non-type-aware `recommended` set. It is faster, needs no
@@ -499,9 +498,6 @@ Settings explained:
   component tests.
 - Do **not** set `passWithNoTests`. The toolchain tests below guarantee every project has at
   least one test, so an accidentally empty suite fails rather than passes.
-- T037 later adds a fourth project, `tooling` (node environment, `include:
-  ['scripts/**/*.test.{ts,mjs}']`), to the root `projects` list for
-  tests of repository scripts. This ticket does not create it.
 
 `client/test/setup.ts`:
 

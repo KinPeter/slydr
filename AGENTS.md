@@ -25,7 +25,7 @@ Fresh clone has no `shared/dist`: run `npm run build -w @slydr/shared` before di
 
 ## Tests
 
-No e2e (out of scope). Layout: `<workspace>/test/` mirroring `src/` only — never `src/`, `__tests__/`, `tests/`, `*.spec.*`, root `test/`. Vitest `projects: ['shared','server','client']` (+ `tooling` for `scripts/**/*.test.{ts,mjs}` from T037); `shared`/`server` env node `include test/**/*.test.ts`, `client` jsdom `include test/**/*.test.{ts,tsx}` + `test/setup.ts`. No globals: always `import { describe/it/expect/vi } from 'vitest'`. No `passWithNoTests`, no `vitest.workspace.*`.
+No e2e (out of scope). Layout: `<workspace>/test/` mirroring `src/` only — never `src/`, `__tests__/`, `tests/`, `*.spec.*`, root `test/`. Vitest projects are `['shared','server','client']`; `shared`/`server` env node `include test/**/*.test.ts`, `client` jsdom `include test/**/*.test.{ts,tsx}` + `test/setup.ts`. No globals: always `import { describe/it/expect/vi } from 'vitest'`. No `passWithNoTests`, no `vitest.workspace.*`.
 
 Server test rules: never set `SLYDR_ROOT` directly — use `server/test/helpers/` (`createTestEnv()` + `setJailRoot`, returns Supertest app). `import fs from 'node:fs/promises'` as default import only (so `vi.spyOn(fs,…)` works). Backslash-in-path cases are Windows-only. Symlink cases: classified by target kind, image-ness from symlink's own name; folder symlinks followed only inside jail, paths stay as-navigated.
 

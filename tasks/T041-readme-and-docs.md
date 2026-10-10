@@ -2,7 +2,7 @@
 
 **Epic:** E25 — Documentation: README per §13.3
 **Spec sections:** §13.3 (README must cover), §13.1, §13.2, §3.1, §3.4, §4.1 (FR-2.4), §4.3, §5.6, §9.6 (FR-16.9, FR-16.10), §10, §16.1, NFR-1, NFR-9
-**Depends on:** T039, T040
+**Depends on:** T039
 **Estimated size:** M
 
 ---
@@ -35,12 +35,12 @@ step (`npm run docs:check`), so documentation drift fails the build.
   (FR-16.10); the excluded image formats (FR-2.4); where the thumbnail cache lives and how
   to clear it; the keyboard shortcuts.
 - The additional sections requested for a complete project README: development workflow
-  (including the fixture generator and the verification scripts), styling, accessibility,
+  styling, accessibility,
   testing (including the test-only `SLYDR_ROOT` note), configuration (environment variables),
   the security model, the list of supported formats, limitations, and troubleshooting.
 - `scripts/docs/check-readme.mjs` — a dependency-free Node ESM script exporting a pure
   `checkReadme(input)` function plus a CLI entry point that reads the real files.
-- `scripts/docs/test/readme.test.mjs` — Vitest cases (project `tooling`, created by T037) for
+- `scripts/docs/test/readme.test.mjs` — Vitest cases for
   every check rule, run by `npm test`.
 - Root `package.json` script `docs:check`, and one `npm run docs:check` step in
   `.github/workflows/ci.yml` (after the tests step).
@@ -50,7 +50,7 @@ step (`npm run docs:check`), so documentation drift fails the build.
 - Any code, UI copy or behaviour change. If the code and the specification disagree, report
   the discrepancy in the PR description; do not "fix" the code in this ticket and do not
   silently document the wrong behaviour.
-- The CI workflow beyond the single `docs:check` step — owned by **T040**. No CI status badge
+- The CI workflow beyond the single `docs:check` step. No CI status badge
   is added (no remote exists yet and the README contains no images).
 - Browser-driven end-to-end tests — out of scope for v1. The Testing section documents unit, API and component tests only.
 - Screenshots or animated GIFs. They would have to be produced and maintained by hand; the
@@ -83,9 +83,8 @@ The repository is **not** empty. The following exists:
   warning), `SLYDR_CACHE_DIR` (default: OS cache dir below), `SLYDR_CACHE_MAX_MB` (default
   `500`), `SLYDR_QUIET` (suppress non-error logs; truthy unless empty, `0`, `false` or `no`,
   T008), `SLYDR_NO_OPEN` (`1` or `true` stops `npm start` from opening a browser, T039).
-- Root scripts beyond the spec §13.1 set: `fixtures` (T037), `check:bundle` and `smoke:prod`
-  (T039; both report figures and warn above the NFR-8 targets, never fail), `docs:check` (this
-  ticket), plus the `ci:nfr:*` scripts (T040).
+- Root scripts beyond the spec §13.1 set: `check:bundle` and `smoke:prod` (T039; both report
+  figures and warn above the NFR-8 targets, never fail), and `docs:check` (this ticket).
 - Thumbnail cache directories (spec §5.6): Windows `%LOCALAPPDATA%\slydr\thumbnails`; macOS
   `~/Library/Caches/slydr/thumbnails`; Linux `${XDG_CACHE_HOME:-~/.cache}/slydr/thumbnails`.
   Capped at 500 MB by an LRU sweep.
@@ -121,7 +120,7 @@ docs/specification.md win** — see §4.1 step 1.
 2. Create `README.md` from §4.3. Keep the headings exactly as given — `check-readme.mjs`
    asserts them. Prefer short paragraphs, tables and fenced command blocks.
 3. Implement `scripts/docs/check-readme.mjs` (§4.4), its Vitest tests (§6; they are picked up
-   by the `tooling` project that T037 added to the root Vitest configuration), the root script,
+   by the existing Vitest projects), the root script,
    and the CI step:
 
    ```json
@@ -133,8 +132,8 @@ docs/specification.md win** — see §4.1 step 1.
    ```
 
    In `.github/workflows/ci.yml` add one step `README drift check` running
-   `npm run docs:check`, directly after the unit-test step. Change nothing else in the workflow
-   (T040 owns it). There is no `test:docs` script: the tests run in `npm test`.
+   `npm run docs:check`, directly after the unit-test step. Change nothing else in the workflow.
+   There is no `test:docs` script: the tests run in `npm test`.
 4. Run `npm run docs:check`, `npm test`, `npm run lint`, `npm run format` (Prettier
    formats Markdown; commit the result) and `npm run typecheck`.
 
@@ -444,7 +443,6 @@ Requirements: Node.js 22 or newer and npm. Install with `npm ci` from the reposi
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier (writes changes) |
 | `npm run typecheck` | `tsc --noEmit` across all workspaces |
-| `npm run fixtures -- <dir>` | Generates the test picture tree (flags `--large`, `--scan-heavy`, `--no-symlinks`, `--manifest <file>`); nothing binary is committed |
 | `npm run check:bundle` | Prints the gzipped client size and warns above 300 KB (never fails) |
 | `npm run smoke:prod` | Starts the built server from another directory and prints the startup time (warns above 2 s, never fails) |
 | `npm run docs:check` | Checks this README against the code (scripts, variables, image formats) |
@@ -467,15 +465,12 @@ All colours, spacing, type sizes, durations and breakpoints are design tokens in
 ## Testing
 
 ```bash
-npm test                              # unit, API, component and tooling tests
+npm test                              # unit, API and component tests
 ```
 
-Unit, API and component tests run against a generated tree of tiny images, folders, a hidden folder, a
-non-image file and, where the platform allows it, a broken symbolic link; nothing binary is
-committed. Create the same tree yourself with `npm run fixtures -- ./.fixtures/tree`; it
-prints the folder to use as the test-only `SLYDR_ROOT` (see below). A GitHub Actions workflow
-runs install, type-check, lint, the build, the tests and this
-README check on Windows, macOS and Linux with Node 22 and Node 24.
+Unit, API and component tests create their own temporary fixtures; no binary fixture is
+committed. A GitHub Actions workflow runs install, type-check, lint, the build, the tests and
+this README check on Windows, macOS and Linux with Node 22 and Node 24.
 
 ### Test-only variable: SLYDR_ROOT
 
@@ -579,7 +574,7 @@ README content (each item is also enforced by the rule id in brackets where one 
 - [ ] All three thumbnail-cache locations, the 500 MB cap, and how to clear the cache in bash and PowerShell are documented. [D8]
 - [ ] Keyboard shortcuts for the player, explorer and configuration slider are in one table. [D6]
 - [ ] The environment-variable table lists `PORT`, `SLYDR_CACHE_DIR`, `SLYDR_CACHE_MAX_MB`, `SLYDR_QUIET`, `SLYDR_NO_OPEN` with the spec §13.2 defaults, and describes `SLYDR_QUIET` as truthy unless empty, `0`, `false` or `no`. [D3]
-- [ ] The README does not claim hidden entries look different (spec FR-14.5), documents `fixtures`, `check:bundle`, `smoke:prod` and `docs:check`, has the `Styling` and `Accessibility` sections, and contains no badge and no licence text. [D1, D14]
+- [ ] The README does not claim hidden entries look different (spec FR-14.5), documents `check:bundle`, `smoke:prod` and `docs:check`, has the `Styling` and `Accessibility` sections, and contains no badge and no licence text. [D1, D14]
 - [ ] `SLYDR_ROOT` appears only inside `Development`/`Testing`, labelled test-only; it is absent from the quick start, configuration table and troubleshooting. [D4]
 - [ ] Every `npm run ...` command in the README exists in the root `package.json`. [D2]
 - [ ] All internal links and anchors resolve; no TODO/TBD/placeholders; no author-specific paths. [D11, D12]
@@ -599,7 +594,7 @@ All in `scripts/docs/test/readme.test.mjs`, a Vitest file (`describe`, `it`, `ex
 `validReadme()` returning a minimal string that satisfies every rule — headings, one table row
 per env var, the three cache paths, etc.) and derive each negative case by replacing one
 fragment of it. Also a `validInput(overrides)` helper supplying
-`packageJson = { scripts: { dev, build, start, test, lint, format, typecheck, fixtures, 'check:bundle', 'smoke:prod', 'docs:check' }, engines: { node: '>=22' } }`,
+`packageJson = { scripts: { dev, build, start, test, lint, format, typecheck, 'check:bundle', 'smoke:prod', 'docs:check' }, engines: { node: '>=22' } }`,
 `imageExtensionsSource` containing the nine extensions in a `new Set([...])`, and
 `fileExists = rel => ['docs/specification.md', 'tasks/README.md'].includes(rel)`.
 
@@ -677,4 +672,3 @@ fragment of it. Also a `validInput(overrides)` helper supplying
   in `npm test`, so a README that disagrees with the code fails the build.
 - **Spec §16 relevance.** A1, A2, A4, A5, A6 and §10's swipe exclusion are all user-visible
   decisions; they are listed under Limitations so a user hitting one sees it was intended.
-

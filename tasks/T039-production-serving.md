@@ -32,7 +32,6 @@ This ticket adds that production path: static hosting with correct caching and t
 - The anti-FOUC script itself and the decision to ship it as a same-origin file — **T021** (restated here, not re-decided).
 - The dev-mode browser opening via `vite --open` and `npm run dev` — **T019**; it must keep working unchanged.
 - Browser-driven end-to-end runs against this production server — out of scope for v1.
-- CI workflow changes (running the built-output tests, `check:bundle` and `smoke:prod` after the build step) — **T040**.
 - README prose about install and run — **E25**; this ticket only adds the facts listed in the definition of done.
 - The API routes, guards and error envelope themselves — **T008–T018**.
 
@@ -288,7 +287,7 @@ If `openBrowser` returns `false` or the child errors, the banner has already tol
 **Startup time and cross-cwd run: `scripts/smoke-prod.mjs`.** A dependency-free Node script that proves the production path from spawn to served HTML:
 
 1. Require `server/dist/index.js` and `client/dist/index.html` to exist; otherwise exit `2` with "Run npm run build first."
-2. Create two temp directories (jail root with a file `hello.jpg`, and a cache dir). Spawn `process.execPath` with arguments `[<abs server/dist/index.js>, '--no-open']`, **`cwd: os.tmpdir()`**, env `{ ...process.env, PORT: '4517', SLYDR_ROOT: <root>, SLYDR_CACHE_DIR: <cache>, SLYDR_NO_OPEN: '1' }` (not quiet: the banner is the readiness signal). Port allocation across the repo: 4517 this script, 4617 the CI check scripts (T040).
+2. Create two temp directories (jail root with a file `hello.jpg`, and a cache dir). Spawn `process.execPath` with arguments `[<abs server/dist/index.js>, '--no-open']`, **`cwd: os.tmpdir()`**, env `{ ...process.env, PORT: '4517', SLYDR_ROOT: <root>, SLYDR_CACHE_DIR: <cache>, SLYDR_NO_OPEN: '1' }` (not quiet: the banner is the readiness signal). Port allocation across the repo: 4517 for this script.
 3. Read stdout until the line matching `/http:\/\/127\.0\.0\.1:(\d+)/` appears (10 s timeout, then fail); record `t = performance.now() - spawnTime`. The captured port is the actual bound port.
 4. With `fetch`: `GET /api/health` → `200`; `GET /` → `200`, header `content-security-policy` equals the spec string, `x-content-type-options: nosniff`, body contains `<div id="root">`; `GET /theme-init.js` → `200`; `GET /api/fs/list?path=` → `200`; `GET /api/does-not-exist` → `404` with JSON `error.code === 'NOT_FOUND'`; `GET /nope` → `404`.
 5. Kill the child (`child.kill()`), remove the temp directories, and perform the whole sequence **twice**; the second iteration is the "warm" measurement. If its time from spawn to the first successful `GET /` exceeds `Number(process.env.SLYDR_STARTUP_TARGET_MS ?? 2000)` milliseconds, print a warning; **never fail on a time figure** (the app runs locally and slow CI runners would only make the gate flaky). **Decision (not specified):** the 2 s spec target covers browser time as well; this script measures the server's share (process start to HTML served). Functional failures (no banner within 10 s, wrong status or header) still exit `1`.
@@ -338,7 +337,7 @@ Build the app with `createApp(makeTestConfig({ clientDir: tmp }), logger)` (T008
 
 ### 6.2 `server/test/builtHtml.test.ts` (contract test over the real build)
 
-Skipped with `describe.skipIf(!fs.existsSync(distIndex))` when `client/dist/index.html` does not exist, so `npm test` works on a checkout that has not been built. To keep it from passing vacuously in CI, T040's workflow runs `npm run build` **before** `npm test`; with a built tree the file really runs on every leg. Assertions:
+Skipped with `describe.skipIf(!fs.existsSync(distIndex))` when `client/dist/index.html` does not exist, so `npm test` works on a checkout that has not been built. The existing CI workflow runs `npm run build` **before** `npm test`; with a built tree the file really runs. Assertions:
 
 1. Every `<script>` has a `src` that starts with `/` and has no inline body, so `script-src 'self'` suffices (also guards against a plugin introducing inline code).
 2. The first `<script>` in `<head>` is `<script src="/theme-init.js"></script>` with no `defer`, `async` or `type="module"`, and it precedes the `<script type="module">` tag (the T021 requirement, see §4.4).
@@ -358,7 +357,7 @@ Pure unit tests with an injected `spawnFn` stub that records its arguments and r
 
 ### 6.4 Smoke script
 
-`scripts/smoke-prod.mjs` is itself the verification for criteria 9 to 12 and 14 (server side). It is run by `npm run smoke:prod` and added by T040 to the CI workflow after the build step (report-only for time figures). It has no Vitest wrapper.
+`scripts/smoke-prod.mjs` is itself the verification for criteria 9 to 12 and 14 (server side). It is run by `npm run smoke:prod` and has no Vitest wrapper.
 
 ### 6.5 Manual checks (record the result in the pull request)
 
@@ -391,6 +390,4 @@ Pure unit tests with an injected `spawnFn` stub that records its arguments and r
 - **`express.static` and Express 5.** `express.static` is unchanged in Express 5. Do not add a catch-all `app.get('*', …)` or `app.get('/{*splat}', …)` fallback: there is no client router, and a fallback would turn API typos into HTML responses (criteria 5 and 6).
 - **Antivirus and first-run latency on Windows.** The first start after a build can be noticeably slower because of real-time scanning of fresh `dist` files; this is why the smoke script measures the second (warm) run against the target and only reports the cold run.
 - **Caching during development of the app itself.** `no-cache` on HTML plus hashed asset names means a rebuilt app shows up on a normal reload. If a developer sees a stale page, the cause is almost always a service worker or a manually pinned cache from another project served on the same `127.0.0.1` port.
-- **Out of scope but adjacent.** CI wiring of `smoke:prod` against the production server belongs to T040; this ticket supplies the command it calls.
-
 

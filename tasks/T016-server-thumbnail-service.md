@@ -78,8 +78,6 @@ icon, and the rest of the grid is unaffected.
 - Resolving the cache directory from the environment and the per-OS defaults — **T008**
   (`readServerConfig`, which also owns the tests for that table). Parsing `SLYDR_CACHE_MAX_MB`
   — T008 as well.
-- The repository-wide fixture generator — **T037**. Tests here synthesise images with `sharp`
-  through `server/test/helpers/images.ts`.
 
 ## 3. Prerequisites and assumed state
 
@@ -690,7 +688,7 @@ All in **`server/test/services/thumbnails.test.ts`** (Vitest), per specification
 
 ### Fixture and helpers
 
-**The shared fixture generator is T037; do not depend on it.** In `beforeAll` create a base
+In `beforeAll` create a base
 directory with `makeTempBase('slydr-thumbs-')` from `server/test/helpers/fs.ts` (already
 `realpath.native`'d: macOS `/var` and Windows 8.3 short names). Under it create `src/` for
 images and a fresh `cache-<n>/` directory **per test** (so tests never share cache state);
