@@ -59,6 +59,8 @@
   --player-bg-blur: 32px;
   --player-bg-brightness: 0.55;
   --player-bg-saturate: 1.1;
+  /* Contract: --player-transition-dur is set inline on .player for each swap;
+     foreground layers and the incoming background cover share it. */
 
   /* ---- Radius ---- */
   --radius-sm: 0.25rem; /*  4px */

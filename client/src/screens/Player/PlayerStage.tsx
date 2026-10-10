@@ -11,6 +11,8 @@ export interface PlayerStageProps {
   state: PlayerEngineState;
   controls: PlayerControls;
   config: SlideshowConfig;
+  animations?: boolean;
+  releasePrevious?: (key: string) => void;
   registerLayer(key: string, el: HTMLImageElement | null): void;
   reportLoadError(key: string): void;
   reportLoadSuccess(key: string): void;
@@ -26,16 +28,21 @@ export function PlayerStage({
   reportLoadSuccess,
   background,
   overlay,
+  animations = false,
+  releasePrevious = () => undefined,
 }: PlayerStageProps) {
+  void config;
   const layers = [
-    state.previous === null ? null : (
+    state.previous === null || !animations ? null : (
       <SlideImage
         key={state.previous.key}
         slide={state.previous}
         role="previous"
         swapReason={state.swapReason}
         durationMs={state.durationMs}
-        animations={config.animations}
+        animations={animations}
+        paused={state.status === 'paused'}
+        onFadeComplete={() => releasePrevious(state.previous?.key ?? '')}
         onRef={(el) => registerLayer(state.previous?.key ?? '', el)}
         onLoad={() => reportLoadSuccess(state.previous?.key ?? '')}
         onError={() => reportLoadError(state.previous?.key ?? '')}
@@ -48,7 +55,9 @@ export function PlayerStage({
         role="current"
         swapReason={state.swapReason}
         durationMs={state.durationMs}
-        animations={config.animations}
+        animations={animations}
+        paused={state.status === 'paused'}
+        onFadeComplete={() => undefined}
         onRef={(el) => registerLayer(state.current?.key ?? '', el)}
         onLoad={() => reportLoadSuccess(state.current?.key ?? '')}
         onError={() => reportLoadError(state.current?.key ?? '')}
@@ -61,7 +70,9 @@ export function PlayerStage({
         role="next"
         swapReason={state.swapReason}
         durationMs={state.durationMs}
-        animations={config.animations}
+        animations={animations}
+        paused={state.status === 'paused'}
+        onFadeComplete={() => undefined}
         onRef={(el) => registerLayer(state.next?.key ?? '', el)}
         onLoad={() => reportLoadSuccess(state.next?.key ?? '')}
         onError={() => reportLoadError(state.next?.key ?? '')}

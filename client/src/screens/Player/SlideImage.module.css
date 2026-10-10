@@ -1,0 +1,85 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.layer[data-motion='static'] {
+  transition: none;
+  transform: none;
+}
+.layer[data-motion='static'] .img {
+  animation: none;
+  transform: none;
+  will-change: auto;
+}
+.layer[data-motion='static'].next {
+  opacity: 0;
+}
+.layer[data-motion='static'].current {
+  opacity: 1;
+}
+.layer[data-motion='static'].previous {
+  opacity: 0;
+}
+.layer[data-motion='animated'] {
+  transition:
+    opacity var(--player-transition-dur, var(--slide-transition-duration)) var(--ease-standard),
+    transform var(--player-transition-dur, var(--slide-transition-duration)) var(--ease-standard);
+}
+.layer[data-motion='animated'].next {
+  opacity: 0;
+  transform: scale(var(--slide-in-scale-from));
+  z-index: 0;
+}
+.layer[data-motion='animated'].current {
+  opacity: 1;
+  transform: scale(var(--slide-in-scale-to));
+  z-index: 2;
+}
+.layer[data-motion='animated'].previous {
+  opacity: 0;
+  transform: scale(calc(var(--slide-out-scale-to) / var(--slide-out-scale-from)));
+  z-index: 1;
+}
+.layer[data-motion='animated'][data-phase='enter'] {
+  opacity: 0;
+  transform: scale(var(--slide-in-scale-from));
+}
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(var(--kenburns-scale));
+  }
+}
+.layer[data-motion='animated'].current .img,
+.layer[data-motion='animated'].previous .img {
+  animation: kenburns var(--kb-duration) linear forwards;
+  transform-origin: center center;
+  will-change: transform;
+}
+.layer[data-motion='animated'].next .img,
+.layer[data-motion='animated'][data-phase='enter'] .img {
+  animation: none;
+}
+.layer[data-motion='animated'][data-phase='run'] {
+  will-change: opacity, transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .layer,
+  .img {
+    transition: none !important;
+    animation: none !important;
+  }
+}

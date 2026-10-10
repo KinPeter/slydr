@@ -21,6 +21,7 @@ export interface PlayerEngineState {
   counter: { index: number; total: number };
   isFullscreen: boolean;
   error: string | null;
+  interrupted: boolean;
   preloadSources: string[];
 }
 
@@ -40,6 +41,7 @@ export interface UsePlayerEngineResult {
   registerLayer(key: string, el: HTMLImageElement | null): void;
   reportLoadError(key: string): void;
   reportLoadSuccess(key: string): void;
+  releasePrevious(key: string): void;
   /** Sources two places ahead in the current cycle for off-DOM preloading. */
   preloadSources: string[];
 }

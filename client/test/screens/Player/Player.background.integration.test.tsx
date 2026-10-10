@@ -49,6 +49,7 @@ function state(current: PlayerSlide, previous: PlayerSlide | null): PlayerEngine
     counter: { index: 0, total: 2 },
     isFullscreen: false,
     error: null,
+    interrupted: false,
     preloadSources: [],
   };
 }

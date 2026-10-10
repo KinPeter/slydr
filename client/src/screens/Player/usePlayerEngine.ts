@@ -76,6 +76,7 @@ export function usePlayerEngine({
     counter: { index: 0, total: playlist.length },
     isFullscreen: isFullscreen(),
     error: null,
+    interrupted: false,
     preloadSources: [],
   });
   refState.current = state;
@@ -161,6 +162,7 @@ export function usePlayerEngine({
     (target: PlayerSlide, reason: 'auto' | 'manual') => {
       const r = ref.current;
       const old = refState.current?.current ?? null;
+      const interrupted = refState.current?.previous !== null;
       if (r.timer !== null) clearTimeout(r.timer);
       r.timer = null;
       r.pending = null;
@@ -168,7 +170,8 @@ export function usePlayerEngine({
       if (r.linger !== null) clearTimeout(r.linger);
       publish({
         current: target,
-        previous: old,
+        previous: interrupted ? null : old,
+        interrupted,
         next: null,
         swapReason: reason,
         status: refState.current?.status === 'paused' ? 'paused' : 'playing',
@@ -346,6 +349,12 @@ export function usePlayerEngine({
     },
     [commit],
   );
+  const releasePrevious = useCallback(
+    (key: string) => {
+      if (refState.current?.previous?.key === key) publish({ previous: null });
+    },
+    [publish],
+  );
   const play = useCallback(() => {
     const r = ref.current;
     if (refState.current?.status !== 'paused') return;
@@ -383,6 +392,7 @@ export function usePlayerEngine({
     registerLayer,
     reportLoadError,
     reportLoadSuccess,
+    releasePrevious,
     preloadSources: state.preloadSources,
   };
 }

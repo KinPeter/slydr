@@ -76,4 +76,32 @@ describe('usePlayerEngine scheduling and failures', () => {
     expect(result.current.state.current?.item.path).toBe('one.jpg');
     vi.restoreAllMocks();
   });
+
+  it('marks an interrupted swap and drops the lingering previous layer', () => {
+    vi.useFakeTimers();
+    const onExit = vi.fn();
+    const threeSlides = [
+      ...playlist,
+      { name: 'three.jpg', path: 'three.jpg', dir: '', size: 1, mtimeMs: 1 },
+    ];
+    const { result } = renderHook(() =>
+      usePlayerEngine({ playlist: threeSlides, config: { ...config, loop: true }, onExit }),
+    );
+    act(() => result.current.controls.next());
+    act(() => result.current.reportLoadSuccess('0:1'));
+    expect(result.current.state.previous?.key).toBe('0:0');
+    act(() => result.current.controls.next());
+    act(() => result.current.reportLoadSuccess('0:2'));
+    expect(result.current.state.interrupted).toBe(true);
+    expect(result.current.state.previous).toBeNull();
+    act(() => result.current.releasePrevious('0:0'));
+    expect(result.current.state.previous).toBeNull();
+  });
+
+  it('releases only the currently matching previous layer', () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() => usePlayerEngine({ playlist, config, onExit: vi.fn() }));
+    act(() => result.current.releasePrevious('stale'));
+    expect(result.current.state.previous).toBeNull();
+  });
 });
