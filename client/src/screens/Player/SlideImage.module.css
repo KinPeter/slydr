@@ -65,7 +65,7 @@
 }
 .layer[data-motion='animated'].current .img,
 .layer[data-motion='animated'].previous .img {
-  animation: kenburns var(--kb-duration) linear forwards;
+  animation: kenburns var(--kb-duration) ease-in-out forwards;
   transform-origin: center center;
   will-change: transform;
 }

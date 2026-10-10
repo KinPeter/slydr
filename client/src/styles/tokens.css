@@ -107,15 +107,14 @@
    * exactly that reason: tuning them must never require touching a component.
    */
   --slide-transition-duration: 700ms; /* crossfade length, spec §9.4 */
-  --kenburns-scale: 1.06; /* Ken Burns zoom target, spec §9.4 */
+  --kenburns-scale: 1.04; /* Ken Burns zoom target, spec §9.4 */
 
   /*
-   * Crossfade geometry, spec §9.4. The outgoing layer starts exactly where the
-   * Ken Burns animation ended, so --slide-out-scale-from IS --kenburns-scale:
-   * tuning the zoom target in one place can never produce a jump at the start
-   * of the transition. The other three values are independent literals.
+   * Crossfade geometry, spec §9.4. Keep the transition's outgoing start scale
+   * independent from the Ken Burns target so visual tuning does not alter the
+   * transition. The other three values are independent literals.
    */
-  --slide-out-scale-from: var(--kenburns-scale);
+  --slide-out-scale-from: 1.06;
   --slide-out-scale-to: 1.1;
   --slide-in-scale-from: 0.96;
   --slide-in-scale-to: 1;

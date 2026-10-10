@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 // so these tests parse the CSS text instead of asserting on getComputedStyle.
 // Live cascade verification in all four states is manual (see §7).
 let tokensCss = '';
+let slideImageCss = '';
 
 async function readClientFile(...segments: Array<string>): Promise<string> {
   const candidates = [join(process.cwd(), 'client', ...segments), join(process.cwd(), ...segments)];
@@ -22,6 +23,7 @@ async function readClientFile(...segments: Array<string>): Promise<string> {
 
 beforeAll(async () => {
   tokensCss = await readClientFile('src', 'styles', 'tokens.css');
+  slideImageCss = await readClientFile('src', 'screens', 'Player', 'SlideImage.module.css');
 });
 
 // ---------------------------------------------------------------------------
@@ -251,13 +253,18 @@ describe('tokens.css — token completeness', () => {
     expect(themeBlocks().baseline.get('--slide-transition-duration')).toBe('700ms');
   });
 
-  it('declares --kenburns-scale as 1.06', () => {
-    expect(themeBlocks().baseline.get('--kenburns-scale')).toBe('1.06');
+  it('declares the slower Ken Burns target scale', () => {
+    expect(themeBlocks().baseline.get('--kenburns-scale')).toBe('1.04');
   });
 
-  it('declares --slide-out-scale-from as var(--kenburns-scale)', () => {
+  it('uses smooth timing for the Ken Burns animation', () => {
+    expect(slideImageCss).toContain('animation: kenburns var(--kb-duration) ease-in-out forwards;');
+  });
+
+  it('keeps the transition scale independent from the Ken Burns target', () => {
     const { baseline } = themeBlocks();
-    expect(baseline.get('--slide-out-scale-from')).toBe('var(--kenburns-scale)');
+    expect(baseline.get('--slide-out-scale-from')).toBe('1.06');
+    expect(baseline.get('--slide-out-scale-from')).not.toBe(baseline.get('--kenburns-scale'));
     expect(baseline.get('--slide-out-scale-to')).toBe('1.1');
     expect(baseline.get('--slide-in-scale-from')).toBe('0.96');
     expect(baseline.get('--slide-in-scale-to')).toBe('1');
