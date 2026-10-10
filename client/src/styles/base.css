@@ -1,0 +1,238 @@
+/*
+ * Slydr base styles — spec §10, NFR-6.
+ * Loaded after tokens.css. Element-level defaults only; everything
+ * component-specific belongs in that component's *.module.css.
+ *
+ * Authoring convention — tokens only, CSS Modules everywhere:
+ *  - Components reference tokens only through var(--...). A literal colour in
+ *    a *.module.css file is a defect: it will be wrong in one of the two
+ *    themes. A guard test (client/test/styles/no-hardcoded-colours.test.ts)
+ *    enforces this: no colour literal may appear in client source outside
+ *    tokens.css.
+ *  - A component lives in client/src/components/<Name>/ with <Name>.tsx and
+ *    <Name>.module.css beside it; a screen lives in client/src/screens/<Screen>/
+ *    with the same pairing. Only the two stylesheets owned by T020
+ *    (tokens.css, base.css) are global stylesheets. Any other global CSS file
+ *    is a defect; if a rule feels global, it almost always belongs on a shared
+ *    component instead.
+ *  - Vite handles *.module.css out of the box, with no configuration. Class
+ *    names are locally scoped and hashed in the production build. Import as a
+ *    namespace and index it: import styles from './Button.module.css', then
+ *    className={styles.button}. Use camelCase class names in the CSS file so
+ *    the TypeScript property access reads naturally (styles.iconOnly).
+ *    Compose multiple classes with the tiny cx() helper from
+ *    client/src/lib/cx.ts rather than a classnames dependency.
+ *  - Hover affordances must be guarded with a hover-capable media query (see
+ *    the breakpoint convention block at the bottom of this file), and every
+ *    hover-only affordance needs a tap or focus equivalent. Never write a bare
+ *    outline rule that removes the focus indicator; the :focus-visible ring
+ *    below is its replacement.
+ *
+ * Canonical component-stylesheet shape to copy (Example.module.css):
+ *
+ * .card {
+ *   background: var(--bg-elevated);
+ *   color: var(--fg);
+ *   border: 1px solid var(--border-subtle);
+ *   border-radius: var(--radius-md);
+ *   padding: var(--space-4);
+ *   box-shadow: var(--shadow-1);
+ *   transition: background-color var(--dur-fast) var(--ease-standard);
+ * }
+ * @media (hover: hover) {
+ *   .card:hover { background: var(--bg-sunken); }
+ * }
+ * .cardTitle {
+ *   font-size: var(--text-lg);
+ *   margin-bottom: var(--space-2);
+ * }
+ * .cardMeta {
+ *   font-size: var(--text-sm);
+ *   color: var(--fg-muted);
+ * }
+ *
+ * Note what the example does NOT contain: no colour literals, no px font
+ * sizes, no unguarded hover rule, and no rule that removes the focus outline.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Spec §10: base font 16 px, type scale in rem. Never set a px font-size
+     on html other than 100% — doing so breaks the user's browser zoom
+     and font-size preference. */
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  /* No color-scheme here: tokens.css sets it per theme block, and a value on
+     html would override the forced light/dark value. */
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--fg);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/*
+ * Spec §10: no horizontal page scrolling from 320 px upward.
+ * `overflow-x: clip` on body ONLY. Do not use `hidden`, and do not put any
+ * overflow value on html: `hidden` (on body, or on html and body together)
+ * turns the body into a scroll container, which silently breaks
+ * `position: sticky` against the viewport. Spec §7.1 needs a sticky explorer
+ * header and footer. `clip` crops without creating a scroll container.
+ * This is only a safety net: a component that overflows at 320 px is still a
+ * bug to fix in that component (and `clip` also clips focus rings at the edge).
+ */
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Spec §10: minimum 16 px side gutter on page-level content. Screens opt in
+   by using this class on their outermost content wrapper. */
+.page-gutter {
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right));
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: var(--leading-tight);
+  font-weight: 650;
+}
+h1 {
+  font-size: var(--text-2xl);
+}
+h2 {
+  font-size: var(--text-xl);
+}
+h3 {
+  font-size: var(--text-lg);
+}
+h4 {
+  font-size: var(--text-md);
+}
+
+p {
+  margin: 0;
+}
+
+img,
+picture,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.15em;
+}
+
+/* ---- Focus (NFR-6) ---------------------------------------------------- */
+
+/* Remove the UA ring only where we replace it. Never a bare `outline: none`. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* No border-radius here: setting one on every focused element would reshape
+   pill and circular controls (--radius-pill) the moment they receive focus.
+   Browsers already follow the element's own border-radius for outlines. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Reusable ring for elements that cannot use `outline` (clipped containers,
+   tiles inside overflow:hidden parents). */
+.focus-ring-inset:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 4px var(--focus-ring);
+}
+
+/* ---- Screen-reader-only text ------------------------------------------ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Motion (spec §9.4, NFR-6) ---------------------------------------- */
+
+/*
+ * Global safety net. The player ALSO checks prefers-reduced-motion in JS,
+ * because §9.4 requires reduced motion to force the whole animations-off
+ * code path (no Ken Burns, instant swap), not merely a shorter transition.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- Breakpoint convention, spec §10 ----------------------------------
+ *
+ * Mobile-first, min-width only. Use these literal values and no others
+ * (sm, md, lg, xl in this order):
+ *
+ *   @media (min-width:  480px) { ... }
+ *   @media (min-width:  768px) { ... }
+ *   @media (min-width: 1024px) { ... }
+ *   @media (min-width: 1440px) { ... }
+ *
+ * Never introduce a max-width breakpoint or an intermediate value; §10's
+ * layout table is written entirely in terms of these four. The mirrored
+ * --bp-* tokens in tokens.css exist for documentation and for JS that needs
+ * the number, because custom properties cannot appear in a media condition.
+ *
+ * Hover affordances must be guarded, spec §10:
+ *   @media (hover: hover) { .thing:hover { ... } }
+ * and every hover-only affordance needs a tap or focus equivalent.
+ *
+ * Coarse pointers get larger targets, spec §9.5:
+ *   @media (pointer: coarse) { .btn { min-height: var(--target-min-coarse); } }
+ */

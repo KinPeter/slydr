@@ -1,0 +1,216 @@
+/*
+ * Slydr design tokens — spec §6.4, §6.3, §9.2, §16.2.
+ *
+ * Rules for consumers:
+ *  - Components reference tokens only. A literal colour in a *.module.css file
+ *    is a defect: it will be wrong in one of the two themes.
+ *  - Light values are the baseline on :root. Dark values are declared TWICE:
+ *    once under @media (prefers-color-scheme: dark) guarded by
+ *    :root:not([data-theme='light']), and once under :root[data-theme='dark'].
+ *    The OS drives the theme; an explicit data-theme override wins in BOTH
+ *    directions. Keep the two dark blocks byte-identical.
+ *  - color-scheme travels with the theme (light dark on :root, light under
+ *    [data-theme='light'], dark under both dark blocks) so native widgets match
+ *    a forced theme even when it differs from the OS. base.css must not set it.
+ *  - All colour pairs below were checked against WCAG 2.1 AA (NFR-6).
+ *    Text pairs meet >= 4.5:1; control borders and focus rings meet >= 3:1 on
+ *    --bg, --bg-elevated and --bg-sunken. The figures in the comments are
+ *    computed with the WCAG 2.1 relative-luminance formula.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Surfaces and text (light) ---- */
+  --bg: #ffffff;
+  --bg-elevated: #f6f7f9;
+  --bg-sunken: #eceef2;
+  --fg: #15181d; /* 17.79:1 on --bg, 16.60 on --bg-elevated, 15.32 on --bg-sunken */
+  --fg-muted: #5a6270; /*  6.15:1 on --bg, 5.74 on --bg-elevated, 5.29 on --bg-sunken */
+
+  /* ---- Lines ---- */
+  --border: #7a8394; /*  3.82:1 on --bg, 3.56 on --bg-elevated, 3.29 on --bg-sunken — control boundaries, WCAG 1.4.11 */
+  --border-subtle: #dde1e8; /* decorative dividers only; never a control boundary */
+
+  /* ---- Accent ---- */
+  --accent: #1d4ed8; /*  6.70:1 on --bg, 6.25 on --bg-elevated */
+  --accent-fg: #ffffff; /*  6.70:1 on --accent */
+  --accent-hover: #1a44ba;
+  --accent-active: #163a9e;
+
+  /* ---- Focus and status ---- */
+  --focus-ring: #1d4ed8; /*  6.70:1 on --bg. Equals --accent in light; the 2px outline-offset
+                             keeps the ring visually separate from an accent-filled control */
+  --danger: #b42318; /*  6.57:1 on --bg, 6.13 on --bg-elevated */
+  --danger-fg: #ffffff; /*  6.57:1 on --danger */
+
+  /* ---- Overlay (player controls pill, menus) ---- */
+  --overlay-bg: rgba(16, 18, 22, 0.72);
+  --overlay-fg: #ffffff; /* worst case (overlay over a pure white photo): 7.57:1, AA; >= 13:1 over mid-grey */
+  --overlay-fg-muted: #d5d9e0; /* counter text on the overlay; worst case over a pure white photo: >= 4.5:1 */
+
+  /* ---- Elevation ---- */
+  --shadow-1: 0 1px 2px rgba(16, 18, 22, 0.08), 0 2px 8px rgba(16, 18, 22, 0.08);
+  --shadow-2: 0 2px 4px rgba(16, 18, 22, 0.1), 0 8px 24px rgba(16, 18, 22, 0.12);
+
+  /* ---- Player (spec §9.2) ---- */
+  --player-bg: #ffffff; /* pure white in light theme */
+  --player-bg-scale: 1.12;
+  --player-bg-blur: 32px;
+  --player-bg-brightness: 0.55;
+  --player-bg-saturate: 1.1;
+
+  /* ---- Radius ---- */
+  --radius-sm: 0.25rem; /*  4px */
+  --radius-md: 0.5rem; /*  8px */
+  --radius-lg: 1rem; /* 16px */
+  --radius-pill: 999px;
+
+  /* ---- Spacing (4px base; 1rem === 16px) ---- */
+  --space-1: 0.25rem; /*  4px */
+  --space-2: 0.5rem; /*  8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.5rem; /* 24px */
+  --space-6: 2rem; /* 32px */
+  --space-7: 3rem; /* 48px */
+  --space-8: 4rem; /* 64px */
+
+  /* ---- Typography ---- */
+  --font-ui:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-md: 1rem; /* 16px — base */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.375rem; /* 22px */
+  --text-2xl: 1.75rem; /* 28px */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  /* ---- Motion ---- */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /*
+   * ---- Tunable slide-show motion (spec §16.2 item 2) ----
+   * These two values are expected to need one round of visual tuning with the
+   * product owner once the player is playable. They are custom properties for
+   * exactly that reason: tuning them must never require touching a component.
+   */
+  --slide-transition-duration: 700ms; /* crossfade length, spec §9.4 */
+  --kenburns-scale: 1.06; /* Ken Burns zoom target, spec §9.4 */
+
+  /*
+   * Crossfade geometry, spec §9.4. The outgoing layer starts exactly where the
+   * Ken Burns animation ended, so --slide-out-scale-from IS --kenburns-scale:
+   * tuning the zoom target in one place can never produce a jump at the start
+   * of the transition. The other three values are independent literals.
+   */
+  --slide-out-scale-from: var(--kenburns-scale);
+  --slide-out-scale-to: 1.1;
+  --slide-in-scale-from: 0.96;
+  --slide-in-scale-to: 1;
+
+  /* ---- Layer order inside the player (spec §9.2) ---- */
+  --z-player-bg: 0;
+  --z-player-image: 1;
+  --z-player-controls: 2;
+
+  /*
+   * ---- Breakpoints, spec §10 ----
+   * Documentation only. CSS custom properties CANNOT be used inside a media
+   * query condition, so every @media rule repeats the literal px value. These
+   * declarations exist so the single source of truth is readable here and so
+   * JS can read them via getComputedStyle when it genuinely needs a number.
+   */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1440px;
+
+  /* Minimum side gutter, spec §10 */
+  --page-gutter: 1rem; /* 16px */
+
+  /* Minimum interactive target sizes, spec §9.5 / §10 */
+  --target-min: 2.75rem; /* 44px */
+  --target-min-coarse: 3rem; /* 48px */
+}
+
+/* ===== DARK — OS-driven. The guard lets an explicit light override win. ===== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --bg: #121417;
+    --bg-elevated: #1b1e23;
+    --bg-sunken: #0c0e11;
+    --fg: #e9ecf1; /* 15.58:1 on --bg, 14.11 on --bg-elevated, 16.32 on --bg-sunken */
+    --fg-muted: #a0a8b4; /*  7.69:1 on --bg, 6.97 on --bg-elevated, 8.06 on --bg-sunken */
+
+    --border: #6b7480; /*  3.90:1 on --bg, 3.53 on --bg-elevated, 4.08 on --bg-sunken */
+    --border-subtle: #2a2e35;
+
+    --accent: #7ea6ff; /*  7.72:1 on --bg, 6.99 on --bg-elevated */
+    --accent-fg: #0b1020; /*  7.92:1 on --accent */
+    --accent-hover: #9ab8ff;
+    --accent-active: #b4caff;
+
+    --focus-ring: #93b4ff; /*  8.97:1 on --bg */
+    --danger: #ff9b94; /*  9.11:1 on --bg, 8.25 on --bg-elevated */
+    --danger-fg: #2a0b08;
+
+    --overlay-bg: rgba(10, 11, 14, 0.74);
+    --overlay-fg: #ffffff; /* worst case over a pure white photo: 8.83:1 */
+    --overlay-fg-muted: #d5d9e0; /* worst case over a pure white photo: >= 4.5:1 */
+
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
+    --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.65), 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    --player-bg: #000000; /* pure black in dark theme, spec §9.2 */
+  }
+}
+
+/* ===== DARK — explicit override. Must stay byte-identical to the block above. ===== */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #121417;
+  --bg-elevated: #1b1e23;
+  --bg-sunken: #0c0e11;
+  --fg: #e9ecf1;
+  --fg-muted: #a0a8b4;
+
+  --border: #6b7480;
+  --border-subtle: #2a2e35;
+
+  --accent: #7ea6ff;
+  --accent-fg: #0b1020;
+  --accent-hover: #9ab8ff;
+  --accent-active: #b4caff;
+
+  --focus-ring: #93b4ff;
+  --danger: #ff9b94;
+  --danger-fg: #2a0b08;
+
+  --overlay-bg: rgba(10, 11, 14, 0.74);
+  --overlay-fg: #ffffff;
+  --overlay-fg-muted: #d5d9e0;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.65), 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --player-bg: #000000;
+}
+
+/* ===== LIGHT — explicit override. Only the native-widget colour scheme: every
+   colour token already has its light value on :root. ===== */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
