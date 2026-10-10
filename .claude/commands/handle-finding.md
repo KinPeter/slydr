@@ -56,9 +56,22 @@ at a time. Pass the original issue description unchanged to every issue agent.
    VERIFICATION: PASS
    ```
 
-   `VERIFICATION: PASS` must cover all four checks. If any field is absent or
-   has a different value, stop immediately without running final verification,
-   staging, or committing, and ask the user.
+   `VERIFICATION: PASS` must cover all four checks, and the response must also
+   include a `CHECKS:` block with one passing, exit-0 line for each exact
+   command: `npm run typecheck`, `npm run lint` (with 0 warnings), `npm test`,
+   and `npm run format:check`.
+
+   If the fixer reports `FIXER_RESULT: SUCCESS`, `FINDINGS: all fixed` (or
+   `no findings`), and `ESCALATIONS: none` but omits or malforms only the
+   command-by-command evidence, use the Agent tool one additional time with
+   `subagent_type` `slydr-issue-fixer` in **verification-only recovery mode**,
+   passing the same issue description and review path. Tell it to change no
+   files, run all four commands from the repository root, and return the exact
+   result fields plus evidence block. This is evidence recovery, not a second
+   fix pass. If recovery reports any failure, escalation, source change, or
+   still lacks valid evidence, stop without final verification, staging, or
+   committing and ask the user. Any other missing or failed result field is an
+   ordinary fixer failure and must stop immediately.
 
 ## Final verification and commit
 

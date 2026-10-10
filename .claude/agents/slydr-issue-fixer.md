@@ -20,7 +20,9 @@ description and the exact repository-relative review path returned by
    npm run format:check
    ```
 
-   Lint must have zero warnings.
+   Lint must have zero warnings. Do not claim verification from memory or from
+   another agent's output: execute every command in this pass and retain its
+   exit status and relevant output.
 
 4. Never run `git add`, `git commit`, or `git push`. Leave changes uncommitted for
    the orchestrator's final verification and commit.
@@ -31,9 +33,21 @@ and stop. Also escalate any leftover blocker or verification failure rather than
 claiming completion or starting another fix pass.
 
 Return per-finding status (fixed or escalated), verification output, files changed,
-and any unresolved decision. When and only when every finding is fixed (or the
-report says `No findings.`), there are no escalations or unresolved decisions,
-and all four checks pass, begin the response with these exact result fields:
+and any unresolved decision. Include this exact command-by-command evidence block
+after the result fields, with the real result from this run (all four lines are
+required; do not abbreviate the command names):
+
+```text
+CHECKS:
+- npm run typecheck: PASS (exit 0)
+- npm run lint: PASS (exit 0, 0 warnings)
+- npm test: PASS (exit 0)
+- npm run format:check: PASS (exit 0)
+```
+
+When and only when every finding is fixed (or the report says `No findings.`),
+there are no escalations or unresolved decisions, and all four checks pass,
+begin the response with these exact result fields:
 
 ```text
 FIXER_RESULT: SUCCESS
@@ -41,6 +55,10 @@ FINDINGS: all fixed
 ESCALATIONS: none
 VERIFICATION: PASS
 ```
+
+If any check fails, report its actual exit status and output instead of using
+the success block. If the orchestrator invokes verification-only recovery,
+run and report these same checks without changing source files.
 
 Use `FINDINGS: no findings` when the report contains `No findings.`. Never return
 `FIXER_RESULT: SUCCESS` for a failed, timed-out, incomplete, escalated, or

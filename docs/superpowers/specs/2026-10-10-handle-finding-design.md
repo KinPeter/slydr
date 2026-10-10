@@ -49,9 +49,13 @@ each issue-specific agent. The orchestrator performs these sequential stages:
 4. Spawn `slydr-issue-fixer` with the original description and the exact review
    path. It fixes all findings, preserves or extends tests, and escalates
    unresolved behavior choices. It may make only this one fix pass.
-5. Run `npm run typecheck`, `npm run lint`, `npm test`, and
-   `npm run format:check` in the orchestrator. All must pass with zero lint
-   warnings.
+5. Require the fixer to run `npm run typecheck`, `npm run lint`, `npm test`, and
+   `npm run format:check`, returning command-by-command exit-status evidence
+   with zero lint warnings. If the fixer reports that findings are fixed with no
+   escalations but omits only this evidence, the orchestrator may invoke the
+   fixer once in verification-only recovery mode; recovery may not edit source
+   files and does not count as a second fix pass. The orchestrator then runs the
+   same four commands authoritatively.
 6. Stage all changes only after verification, confirm the staged set contains
    only intended files and never `node_modules/`, `dist/`, or `.env`, then
    commit a `fix:` message summarizing the issue. Do not push. Report the hash
@@ -83,8 +87,10 @@ source code and writes only its run-specific review report.
 
 Reads `AGENTS.md`, the issue description, the review report, and the changed
 code. It fixes findings using the smallest correct diff, adds tests when
-needed, and runs all four standard checks. It never edits the review report or
-commits. It escalates behavior decisions rather than inventing requirements.
+needed, and runs all four standard checks, returning command-by-command
+exit-status evidence. In verification-only recovery it changes no files and
+only reruns/reports those checks. It never edits the review report or commits.
+It escalates behavior decisions rather than inventing requirements.
 
 ## Review report naming
 
