@@ -98,6 +98,10 @@ body {
   overflow-x: clip;
 }
 
+body.player-open {
+  overflow: hidden;
+}
+
 #root {
   min-height: 100dvh;
   display: flex;
