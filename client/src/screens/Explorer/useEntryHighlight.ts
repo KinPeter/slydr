@@ -1,12 +1,20 @@
 import { useCallback, useState } from 'react';
 import type { FsEntry } from '@slydr/shared';
 
+export type EntryHighlightState = {
+  activeIndex: number;
+  setActiveIndex: (index: number) => void;
+};
+
 export function useEntryHighlight(
   entries: FsEntry[],
   navigate: (path: string) => void,
   parentPath: string | null,
+  shared?: EntryHighlightState,
 ) {
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [localActiveIndex, setLocalActiveIndex] = useState(-1);
+  const activeIndex = shared?.activeIndex ?? localActiveIndex;
+  const setActiveIndex = shared?.setActiveIndex ?? setLocalActiveIndex;
   const move = useCallback(
     (index: number) => {
       const next = Math.max(0, Math.min(entries.length - 1, index));
@@ -14,7 +22,7 @@ export function useEntryHighlight(
       if (entries[next])
         document.getElementById(`slydr-entry-${next}`)?.scrollIntoView({ block: 'nearest' });
     },
-    [entries],
+    [entries, setActiveIndex],
   );
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -47,7 +55,7 @@ export function useEntryHighlight(
       else if (kind === 'double' && entries[index]?.type === 'folder')
         navigate(entries[index].path);
     },
-    [entries, navigate],
+    [entries, navigate, setActiveIndex],
   );
   return { activeIndex, setActiveIndex, onKeyDown, handleEntryPointer };
 }

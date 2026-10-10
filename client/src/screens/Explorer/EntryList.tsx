@@ -1,7 +1,7 @@
 import type { FsEntry } from '@slydr/shared';
 import { useRef } from 'react';
 import { EntryRow } from './EntryRow';
-import { useEntryHighlight } from './useEntryHighlight';
+import { useEntryHighlight, type EntryHighlightState } from './useEntryHighlight';
 import { FOLDER_CONTENTS } from './copy';
 import styles from './EntryList.module.css';
 
@@ -9,10 +9,12 @@ export function EntryList({
   entries,
   navigate,
   parentPath,
+  highlight,
 }: {
   entries: FsEntry[];
   navigate: (path: string) => void;
   parentPath: string | null;
+  highlight?: EntryHighlightState;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const lastTap = useRef<{ index: number; time: number } | null>(null);
@@ -20,6 +22,7 @@ export function EntryList({
     entries,
     navigate,
     parentPath,
+    highlight,
   );
   const indexOf = (event: React.SyntheticEvent): number | null => {
     const row = (event.target as Element).closest('[role="option"]');

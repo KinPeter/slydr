@@ -4,11 +4,14 @@ import { getRoot } from '../../api/client';
 import { useAppActions, useAppState, useExplorerRestore } from '../../state/AppStateProvider';
 import { Skeleton } from '../../components';
 import { EntryList } from './EntryList';
+import { EntryGrid } from './EntryGrid';
+import gridStyles from './EntryGrid.module.css';
 import { ExplorerFooter } from './ExplorerFooter';
 import { ExplorerHeader } from './ExplorerHeader';
 import { ExplorerNotices } from './ExplorerNotices';
 import { ExplorerScrollContext } from './ExplorerScrollContext';
 import { useDirectoryListing } from './useDirectoryListing';
+import { useEntryHighlight } from './useEntryHighlight';
 import { EXPLORER_HEADING, EMPTY_FOLDER, HIDDEN_EMPTY } from './copy';
 import styles from './Explorer.module.css';
 
@@ -40,6 +43,11 @@ export function Explorer() {
   const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
   const [restoreNotice, setRestoreNotice] = useState(false);
   const listing = useDirectoryListing(state.explorer.path, state.explorer.showHidden);
+  const highlight = useEntryHighlight(
+    listing.data?.entries ?? [],
+    listing.navigate,
+    listing.data?.parentPath ?? null,
+  );
   const { error, requestedPath, fallbackToRoot } = listing;
   const loadedPath = listing.data?.path;
   const restoredPath = restore.restoredPath;
@@ -71,8 +79,17 @@ export function Explorer() {
   const empty = listing.data?.entries.length === 0 && !listing.loading && !listing.error;
   const restoreDismiss = () => setRestoreNotice(false);
   const renderBody = () => {
-    // T027 replaces the 'grid' branch with <EntryGrid …/>.
-    // Until then grid falls back to the list so the persisted toggle is never a dead end.
+    if (!listing.data && listing.loading && state.explorer.viewMode === 'grid')
+      return (
+        <div className={gridStyles.grid} role="grid" aria-busy="true" aria-label="Folder contents">
+          {Array.from({ length: 24 }, (_, i) => (
+            <div className={gridStyles.skeletonTile} role="gridcell" key={i}>
+              <Skeleton className={gridStyles.skeletonMedia} />
+              <Skeleton className={gridStyles.skeletonName} />
+            </div>
+          ))}
+        </div>
+      );
     if (!listing.data && listing.loading)
       return (
         <div className={styles.skeletons} role="listbox" aria-busy="true">
@@ -91,13 +108,22 @@ export function Explorer() {
           {!state.explorer.showHidden && <span>{HIDDEN_EMPTY}</span>}
         </div>
       );
-    return listing.data ? (
+    if (!listing.data) return null;
+    return state.explorer.viewMode === 'grid' ? (
+      <EntryGrid
+        entries={listing.data.entries}
+        navigate={listing.navigate}
+        parentPath={listing.data.parentPath}
+        highlight={highlight}
+      />
+    ) : (
       <EntryList
         entries={listing.data.entries}
         navigate={listing.navigate}
         parentPath={listing.data.parentPath}
+        highlight={highlight}
       />
-    ) : null;
+    );
   };
   return (
     <ExplorerScrollContext.Provider value={scrollEl}>

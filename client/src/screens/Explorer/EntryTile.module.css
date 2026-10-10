@@ -1,0 +1,29 @@
+.tile {
+  min-width: 0;
+}
+.media {
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  background: var(--bg-sunken);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.typeIcon {
+  width: 40%;
+  height: 40%;
+  color: var(--fg-muted);
+}
+.name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  margin-top: var(--space-1);
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  text-align: center;
+  min-height: 2.5em;
+}
