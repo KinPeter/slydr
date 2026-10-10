@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useAppActions, useAppState } from '../../state/AppStateProvider';
 import { PlayerStage } from './PlayerStage';
+import { PlayerBackground } from './PlayerBackground';
 import { usePlayerEngine } from './usePlayerEngine';
 import { usePreloader } from './usePreloader';
 import { useWakeLock } from './useWakeLock';
@@ -33,6 +34,13 @@ export function Player() {
         registerLayer={engine.registerLayer}
         reportLoadError={engine.reportLoadError}
         reportLoadSuccess={engine.reportLoadSuccess}
+        background={
+          <PlayerBackground
+            fillEmptySpace={app.config.fillEmptySpace}
+            current={engine.state.current}
+            previous={engine.state.previous}
+          />
+        }
       />
     </div>
   );

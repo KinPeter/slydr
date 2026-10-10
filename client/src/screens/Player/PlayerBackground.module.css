@@ -1,0 +1,57 @@
+.background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden; /* clips the scaled-up blurred layers */
+  pointer-events: none; /* decoration only */
+}
+
+.flat {
+  position: absolute;
+  inset: 0;
+  background-color: var(--player-bg);
+}
+
+.cover {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  /* Blur-rim guard: blur() samples transparent pixels at the element edge; scaling above 1
+     pushes that soft rim outside the clipped layer. Raise the scale with the blur radius. */
+  transform: scale(var(--player-bg-scale));
+  filter: blur(var(--player-bg-blur)) brightness(var(--player-bg-brightness))
+    saturate(var(--player-bg-saturate));
+  will-change: transform;
+  /* NFR-4: `filter` is static. It must never appear in a transition or keyframe. */
+}
+
+/* Only the incoming cover fades (opacity only), over the opaque outgoing cover, so the flat
+   layer never shows through mid-fade. Same CSS-only mechanism family as the foreground
+   crossfade; both read --player-transition-dur. */
+.coverIn {
+  animation: coverFadeIn var(--player-transition-dur, var(--slide-transition-duration))
+    var(--ease-standard) both;
+}
+
+@keyframes coverFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.coverFailed {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* T032 also sets the duration to 0ms on the reduced-motion path. */
+  .coverIn {
+    animation: none;
+  }
+}
