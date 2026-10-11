@@ -31,41 +31,43 @@ export function ExplorerHeader({
   const breadcrumbCap = useBreadcrumbCap();
   return (
     <header className={styles.header}>
-      <Breadcrumb
-        path={path}
-        rootTitle={root?.absoluteRoot}
-        onNavigate={onNavigate}
-        maxVisibleSegments={breadcrumbCap}
-      />
-      <IconButton
-        icon={ArrowUp}
-        aria-label="Up one level"
-        disabled={data?.parentPath === null || data === null}
-        onClick={onUp}
-      />
-      <span className={styles.spacer} />
-      {data && <Chip>{imageCount(data.counts.images)}</Chip>}
-      <div role="group" aria-label="View mode">
-        <IconButton
-          icon={List}
-          aria-label={LIST_VIEW}
-          pressed={viewMode === 'list'}
-          onClick={() => onViewMode('list')}
+      <div className={styles.inner}>
+        <Breadcrumb
+          path={path}
+          rootTitle={root?.absoluteRoot}
+          onNavigate={onNavigate}
+          maxVisibleSegments={breadcrumbCap}
         />
         <IconButton
-          icon={LayoutGrid}
-          aria-label={GRID_VIEW}
-          pressed={viewMode === 'grid'}
-          onClick={() => onViewMode('grid')}
+          icon={ArrowUp}
+          aria-label="Up one level"
+          disabled={data?.parentPath === null || data === null}
+          onClick={onUp}
         />
+        <span className={styles.spacer} />
+        {data && <Chip>{imageCount(data.counts.images)}</Chip>}
+        <div role="group" aria-label="View mode">
+          <IconButton
+            icon={List}
+            aria-label={LIST_VIEW}
+            pressed={viewMode === 'list'}
+            onClick={() => onViewMode('list')}
+          />
+          <IconButton
+            icon={LayoutGrid}
+            aria-label={GRID_VIEW}
+            pressed={viewMode === 'grid'}
+            onClick={() => onViewMode('grid')}
+          />
+        </div>
+        <IconButton
+          icon={showHidden ? Eye : EyeOff}
+          aria-label={SHOW_HIDDEN}
+          pressed={showHidden}
+          onClick={() => onShowHidden(!showHidden)}
+        />
+        <ThemeToggle />
       </div>
-      <IconButton
-        icon={showHidden ? Eye : EyeOff}
-        aria-label={SHOW_HIDDEN}
-        pressed={showHidden}
-        onClick={() => onShowHidden(!showHidden)}
-      />
-      <ThemeToggle />
     </header>
   );
 }

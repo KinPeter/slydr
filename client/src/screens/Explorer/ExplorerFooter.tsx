@@ -12,10 +12,12 @@ export function ExplorerFooter({
 }) {
   return (
     <footer className={styles.footer}>
-      <Button variant="primary" size="lg" disabled={disabled} onClick={onSelect}>
-        {SELECT_FOLDER}
-      </Button>
-      <span>{name}</span>
+      <div className={styles.inner}>
+        <Button variant="primary" size="lg" disabled={disabled} onClick={onSelect}>
+          {SELECT_FOLDER}
+        </Button>
+        <span>{name}</span>
+      </div>
     </footer>
   );
 }

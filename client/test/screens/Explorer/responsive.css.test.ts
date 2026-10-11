@@ -21,16 +21,23 @@ describe('explorer responsive CSS', () => {
     expect(read('EntryTile.module.css')).toContain('touch-action: manipulation');
   });
 
-  it('centres the explorer and constrains its header, body, and footer', () => {
+  it('keeps explorer chrome full-width while centring its content', () => {
     const explorer = read('Explorer.module.css');
+    const header = read('ExplorerHeader.module.css');
+    const footer = read('ExplorerFooter.module.css');
     const screen = explorer.slice(
       explorer.indexOf('.screen {'),
       explorer.indexOf('}', explorer.indexOf('.screen {')),
     );
 
     expect(screen).toContain('width: 100%');
-    expect(screen).toContain('max-width: 1000px');
-    expect(screen).toContain('margin-inline: auto');
+    expect(screen).not.toContain('max-width: 1000px');
+    expect(header).toContain('.header {');
+    expect(header).toContain('.inner {');
+    expect(footer).toContain('.footer {');
+    expect(footer).toContain('.inner {');
+    expect(header).toContain('max-width: 1000px');
+    expect(footer).toContain('max-width: 1000px');
   });
 
   it('keeps the explorer header breakpoint contract', () => {

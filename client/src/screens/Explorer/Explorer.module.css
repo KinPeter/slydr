@@ -1,7 +1,5 @@
 .screen {
   width: 100%;
-  max-width: 1000px;
-  margin-inline: auto;
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -12,10 +10,16 @@
 }
 .notices {
   flex: 0 0 auto;
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
 }
 .body {
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
   overflow-y: auto;
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
@@ -51,6 +55,9 @@
 }
 .progress {
   height: 2px;
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
   overflow: hidden;
   background: var(--bg-sunken);
 }
