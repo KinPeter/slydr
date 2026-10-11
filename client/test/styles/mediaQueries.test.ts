@@ -13,7 +13,8 @@ const contents = cssFiles.map((file) => ({
   file,
   css: withoutComments(fs.readFileSync(file, 'utf8')),
 }));
-const tokens = contents.find(({ file }) => file.endsWith('styles/tokens.css'))?.css ?? '';
+const isTokensFile = (file: string) => file.replaceAll('\\', '/').endsWith('/styles/tokens.css');
+const tokens = contents.find(({ file }) => isTokensFile(file))?.css ?? '';
 const breakpoints = [...tokens.matchAll(/--bp-(?:sm|md|lg|xl):\s*(\d+)px/g)].map((m) =>
   Number(m[1]),
 );
@@ -23,6 +24,10 @@ const allowed = new Set([
 ]);
 
 describe('responsive stylesheet tripwires', () => {
+  it('recognizes the token stylesheet with either path separator', () => {
+    expect(isTokensFile(String.raw`D:\a\slydr\slydr\client\src\styles\tokens.css`)).toBe(true);
+  });
+
   it('uses only canonical media widths', () => {
     for (const { file, css } of contents) {
       for (const match of css.matchAll(/\((?:min|max)-width:\s*([^)]+)\)/g)) {
