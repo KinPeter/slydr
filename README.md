@@ -78,7 +78,7 @@ Slydr has three screens: the file explorer, the slide show configuration, and th
 | Duration for image shown       | 5 s     | 1 to 30 seconds per image                                                                                                     |
 | Shuffle images                 | on      | Play in random order                                                                                                          |
 | Loop slide show                | on      | Start again after the last image                                                                                              |
-| Use animations and transitions | on      | Slow zoom on each image and a cross-fade between images                                                                       |
+| Use animations and transitions | on      | Slow zoom on each image (deeper for longer durations) and a cross-fade between images                                         |
 | Fill empty space on screen     | on      | Blurred, darkened copy of the current image behind it; off gives a plain black (dark theme) or white (light theme) background |
 | Start in full screen           | on      | Use the whole screen instead of the browser window                                                                            |
 | Include subfolders             | off     | Also play images from folders inside the chosen one                                                                           |
@@ -305,7 +305,7 @@ UI building blocks (buttons, checkbox, slider, breadcrumb, banner and so on) liv
 
 ### Styling
 
-All colours, spacing, type sizes, durations and breakpoints are design tokens in `client/src/styles/tokens.css`; base element rules are in `client/src/styles/base.css`, and each component has its own CSS Module that uses tokens only (no colour literals). The slide show's tuned values live in the same file: `--slide-transition-duration` (the 700 ms cross-fade) and `--kenburns-scale` (the slow zoom target), so they can be re-tuned without touching components.
+All colours, spacing, type sizes, durations and breakpoints are design tokens in `client/src/styles/tokens.css`; base element rules are in `client/src/styles/base.css`, and each component has its own CSS Module that uses tokens only (no colour literals). The slide show's tuned values live in the same file: `--slide-transition-duration` (the 700 ms cross-fade) and `--kenburns-scale` (the Ken Burns zoom target for the default 5 s duration, used only as a fallback), so they can be re-tuned without touching components. The zoom the player actually uses is chosen from the duration you configure and written inline on the player, so it needs no stylesheet edit: under 5 s → 1.02, 5–9 s → 1.04, 10–14 s → 1.06, 15–19 s → 1.08, 20 s and over → 1.10.
 
 ## Testing
 
