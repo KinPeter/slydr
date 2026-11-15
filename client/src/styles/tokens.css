@@ -107,14 +107,20 @@
    * exactly that reason: tuning them must never require touching a component.
    */
   --slide-transition-duration: 700ms; /* crossfade length, spec §9.4 */
+  /*
+   * Fallback only: the player sets --kenburns-scale inline on .player from the
+   * configured slide duration (client/src/screens/Player/motion.ts). 1.04 is the
+   * value for the default 5 s duration, so the token and the player agree when no
+   * inline override is present.
+   */
   --kenburns-scale: 1.04; /* Ken Burns zoom target, spec §9.4 */
 
   /*
-   * Crossfade geometry, spec §9.4. Keep the transition's outgoing start scale
-   * independent from the Ken Burns target so visual tuning does not alter the
-   * transition. The other three values are independent literals.
+   * Crossfade geometry, spec §9.4. The outgoing wrapper's drift is expressed as
+   * a ratio against the live Ken Burns target, so the visible composite always
+   * ends at --slide-out-scale-to whichever duration bucket is configured. The
+   * incoming scales are independent literals.
    */
-  --slide-out-scale-from: 1.06;
   --slide-out-scale-to: 1.1;
   --slide-in-scale-from: 0.96;
   --slide-in-scale-to: 1;

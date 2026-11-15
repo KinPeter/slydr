@@ -13,7 +13,7 @@ import { usePlayerEngine } from './usePlayerEngine';
 import { usePreloader } from './usePreloader';
 import { useWakeLock } from './useWakeLock';
 import styles from './Player.module.css';
-import { transitionDuration } from './motion';
+import { transitionDuration, kenburnsScale } from './motion';
 import { useEffectiveAnimations } from './useEffectiveAnimations';
 import { PlayerControlsOverlay } from './PlayerControlsOverlay';
 import { useIdleReveal } from './useIdleReveal';
@@ -67,6 +67,7 @@ export function Player() {
       style={
         {
           '--kb-duration': `${app.config.durationSeconds}s`,
+          '--kenburns-scale': String(kenburnsScale(app.config.durationSeconds)),
           '--player-transition-dur': transitionDuration({
             animations,
             swapReason: engine.state.swapReason,

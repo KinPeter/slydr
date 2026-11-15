@@ -3,6 +3,7 @@ import {
   FADE_FALLBACK_MS,
   FADE_SAFETY_MARGIN_MS,
   fadeFallbackMs,
+  kenburnsScale,
   parseFirstDurationMs,
   transitionDuration,
 } from '../../../src/screens/Player/motion';
@@ -26,6 +27,28 @@ describe('transitionDuration', () => {
     expect(transitionDuration({ animations: true, swapReason: 'auto', interrupted: false })).toBe(
       'var(--slide-transition-duration)',
     );
+  });
+});
+
+describe('kenburnsScale', () => {
+  it.each([
+    [1, 1.02],
+    [4, 1.02],
+    [5, 1.04],
+    [9, 1.04],
+    [10, 1.06],
+    [14, 1.06],
+    [15, 1.08],
+    [19, 1.08],
+    [20, 1.1],
+    [30, 1.1],
+  ])('maps a %ds slide duration to scale %s', (seconds, scale) => {
+    expect(kenburnsScale(seconds)).toBe(scale);
+  });
+
+  it('clamps a non-finite or negative duration to the lowest bucket', () => {
+    expect(kenburnsScale(Number.NaN)).toBe(1.02);
+    expect(kenburnsScale(-3)).toBe(1.02);
   });
 });
 

@@ -48,7 +48,10 @@
 }
 .layer[data-motion='animated'].previous {
   opacity: 0;
-  transform: scale(calc(var(--slide-out-scale-to) / var(--slide-out-scale-from)));
+  /* Wrapper drift is a ratio against the Ken Burns target the image actually
+     reached, so the composite ends at --slide-out-scale-to whatever the
+     configured slide duration is (spec §9.4). */
+  transform: scale(calc(var(--slide-out-scale-to) / var(--kenburns-scale)));
   z-index: 1;
 }
 .layer[data-motion='animated'][data-phase='enter'] {
@@ -65,7 +68,7 @@
 }
 .layer[data-motion='animated'].current .img,
 .layer[data-motion='animated'].previous .img {
-  animation: kenburns var(--kb-duration) ease-in-out forwards;
+  animation: kenburns var(--kb-duration) linear forwards;
   transform-origin: center center;
   will-change: transform;
 }

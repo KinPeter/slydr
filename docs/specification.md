@@ -561,8 +561,8 @@ Three stacked layers inside the player container: background layer, image layer(
 
 `animations` **on**:
 
-- **Ken Burns:** each image starts fitted at `scale(1)` and animates to `scale(1.06)` over exactly the slide duration, `linear`, `transform` only. Slow and slight by design.
-- **Transition:** a double-buffered crossfade over `700 ms`, `--ease-standard`. The outgoing layer goes `opacity: 1 → 0` with `scale(1.06 → 1.10)`; the incoming layer goes `opacity: 0 → 1` with `scale(0.96 → 1)`. Fade and zoom run together, so no frame shows an empty background.
+- **Ken Burns:** each image starts fitted at `scale(1)` and animates to a zoom target scaled to the configured slide duration over exactly that duration, `linear`, `transform` only: under 5 s → `1.02`, 5–9 s → `1.04`, 10–14 s → `1.06`, 15–19 s → `1.08`, 20 s and over → `1.10`. Slow and slight by design.
+- **Transition:** a double-buffered crossfade over `700 ms`, `--ease-standard`. The outgoing layer goes `opacity: 1 → 0`, drifting from the Ken Burns target it reached to `1.10`; the incoming layer goes `opacity: 0 → 1` with `scale(0.96 → 1)`. Fade and zoom run together, so no frame shows an empty background.
 - The first slide of a show appears immediately, without a fade (Ken Burns starts at once). In blurred-background mode only the incoming background fades in over the outgoing one, which stays opaque until the fade ends, so the flat layer never shows through mid-transition.
 - Only `opacity` and `transform` are animated, so the compositor can run the whole thing off the main thread.
 - **`prefers-reduced-motion: reduce` forces the animations-off behaviour**, regardless of the configuration value. The configuration checkbox keeps the user's setting; the override is a rendering decision and is noted beneath the checkbox when active.
@@ -784,6 +784,6 @@ Dependency-ordered. The next agent should split these into individually shippabl
 ### 16.2 Items worth confirming before or during development
 
 1. **Port 4317** is an arbitrary pick — confirm it does not clash with anything on the target machines.
-2. **Transition duration 700 ms** and the **Ken Burns target `scale(1.06)`** are tuned values; expect one round of visual tuning with the owner once E17 is playable. They are centralized as CSS custom properties for exactly that reason.
+2. **Transition duration 700 ms** and the **Ken Burns zoom targets** (1.02–1.10, bucketed by slide duration, §9.4) are tuned values; expect one round of visual tuning with the owner once E17 is playable. They are centralized as CSS custom properties for exactly that reason.
 3. **Thumbnail cache cap (500 MB)** and **thumbnail size (256 px)** are defaults chosen for large photo libraries; adjust after measuring on a real folder.
 4. **Touch swipe navigation** in the player is excluded in v1 (§10). Confirm this is acceptable if tablet use matters.

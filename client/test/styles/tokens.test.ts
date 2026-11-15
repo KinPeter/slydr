@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { DEFAULT_CONFIG } from '@slydr/shared';
+import { kenburnsScale } from '../../src/screens/Player/motion';
 
 // The stylesheets under test. jsdom cannot evaluate `prefers-color-scheme`,
 // so these tests parse the CSS text instead of asserting on getComputedStyle.
@@ -253,18 +255,30 @@ describe('tokens.css — token completeness', () => {
     expect(themeBlocks().baseline.get('--slide-transition-duration')).toBe('700ms');
   });
 
-  it('declares the slower Ken Burns target scale', () => {
-    expect(themeBlocks().baseline.get('--kenburns-scale')).toBe('1.04');
+  it('declares the Ken Burns fallback scale as the mapping for the default duration', () => {
+    // The token is only a fallback: the player sets it inline from the config,
+    // so the two must agree when no inline override is present.
+    expect(themeBlocks().baseline.get('--kenburns-scale')).toBe(
+      String(kenburnsScale(DEFAULT_CONFIG.durationSeconds)),
+    );
   });
 
-  it('uses smooth timing for the Ken Burns animation', () => {
-    expect(slideImageCss).toContain('animation: kenburns var(--kb-duration) ease-in-out forwards;');
+  it('animates Ken Burns linearly over the inline --kb-duration', () => {
+    expect(slideImageCss).toContain('animation: kenburns var(--kb-duration) linear forwards;');
   });
 
-  it('keeps the transition scale independent from the Ken Burns target', () => {
+  it('drives the Ken Burns target from --kenburns-scale so the player can override it', () => {
+    expect(slideImageCss).toContain('transform: scale(var(--kenburns-scale));');
+  });
+
+  it('composes the outgoing drift against the live Ken Burns target', () => {
     const { baseline } = themeBlocks();
-    expect(baseline.get('--slide-out-scale-from')).toBe('1.06');
-    expect(baseline.get('--slide-out-scale-from')).not.toBe(baseline.get('--kenburns-scale'));
+    // The outgoing wrapper's drift is a ratio against the Ken Burns target, so the
+    // composite always ends at --slide-out-scale-to whatever bucket is configured.
+    expect(slideImageCss).toContain(
+      'transform: scale(calc(var(--slide-out-scale-to) / var(--kenburns-scale)));',
+    );
+    expect(baseline.has('--slide-out-scale-from')).toBe(false);
     expect(baseline.get('--slide-out-scale-to')).toBe('1.1');
     expect(baseline.get('--slide-in-scale-from')).toBe('0.96');
     expect(baseline.get('--slide-in-scale-to')).toBe('1');
