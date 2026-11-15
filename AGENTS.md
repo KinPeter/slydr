@@ -1,7 +1,8 @@
 # AGENTS.md — Slydr
 
-Source of truth: `docs/specification.md` (v1.0) + `tasks/README.md`.
-Each `tasks/T###-*.md` ticket is self-contained: implement exactly that ticket, do not read other tickets. Never edit `tasks/` or create root `README.md` (owned by T041).
+Initial development is finished. `docs/specification.md` (v1.0), `docs/user-requirements.md`, and `tasks/` are **archived**: they document original intent, naming, and conventions, not a backlog. Slydr is now a living application — work is whatever the user asks for (bugfixes, follow-up findings, small features).
+
+Nothing in this repo is owned or off-limits: `README.md`, `docs/`, and `tasks/*` may be edited or created whenever the work calls for it. Do not refuse a change because an archived ticket "owns" a file. If you are deliberately replaying an archived ticket, treat that ticket as self-contained (implement it without reading other tickets) — but this is an exception, not the default.
 
 ## Stack
 
@@ -17,7 +18,7 @@ Packages: `@slydr/shared` (pure types/constants/helpers, zero runtime deps) → 
 | `npm run typecheck` | build shared → root tooling tsconfig → all workspaces |
 | `npm run lint` / `format` / `format:check` | `eslint .` / `prettier --write .` / `--check .` |
 
-Fresh clone has no `shared/dist`: run `npm run build -w @slydr/shared` before direct `tsc`/`vitest`. Never add deps in T001-listed tickets without cause. Ports: API 4317, Vite 5173, `smoke:prod` 4517, CI checks 4617.
+Fresh clone has no `shared/dist`: run `npm run build -w @slydr/shared` before direct `tsc`/`vitest`. Never add dependencies without cause. Ports: API 4317, Vite 5173, `smoke:prod` 4517, CI checks 4617.
 
 ## TypeScript imports
 
@@ -37,8 +38,8 @@ Wire paths are POSIX, relative to jail root (`""` = home), never absolute. All F
 
 ## Client invariants (spec §6–9)
 
-UI names/headings are fixed in `tasks/README.md` "UI name contract" — quote exact strings in code and tests. Theme: tokens in `styles/tokens.css`, override `slydr.theme` in `localStorage`, pre-paint `public/theme-init.js` as blocking classic script (CSP `script-src 'self'` forbids inline). Persistence: validated parsers, silent default fallback, `try/catch` around all storage (must work with storage disabled); theme writes immediately, rest debounced 250 ms. Player: fullscreen request inside click handler; Escape-in-fullscreen stays in player (browser consumes Esc — do not "fix"); timestamp scheduler, decode-before-advance, ≤3 `<img>` in DOM, Fisher–Yates via `crypto.getRandomValues`; animate `opacity`/`transform` only; honor `prefers-reduced-motion`. Motion: Ken Burns is `linear`; its zoom target comes from `kenburnsScale(config.durationSeconds)` (`screens/Player/motion.ts`) written inline on `.player` as `--kenburns-scale` (`tokens.css` holds only the default-duration fallback), and the outgoing crossfade drift is composed against that live value so it always ends at `--slide-out-scale-to`.
+UI names/headings follow the "UI name contract" in `tasks/README.md` — quote exact strings in code and tests; if a UI name legitimately changes, update the contract in the same change. Theme: tokens in `styles/tokens.css`, override `slydr.theme` in `localStorage`, pre-paint `public/theme-init.js` as blocking classic script (CSP `script-src 'self'` forbids inline). Persistence: validated parsers, silent default fallback, `try/catch` around all storage (must work with storage disabled); theme writes immediately, rest debounced 250 ms. Player: fullscreen request inside click handler; Escape-in-fullscreen stays in player (browser consumes Esc — do not "fix"); timestamp scheduler, decode-before-advance, ≤3 `<img>` in DOM, Fisher–Yates via `crypto.getRandomValues`; animate `opacity`/`transform` only; honor `prefers-reduced-motion`. Motion: Ken Burns is `linear`; its zoom target comes from `kenburnsScale(config.durationSeconds)` (`screens/Player/motion.ts`) written inline on `.player` as `--kenburns-scale` (`tokens.css` holds only the default-duration fallback), and the outgoing crossfade drift is composed against that live value so it always ends at `--slide-out-scale-to`.
 
-## Definition of done (every ticket)
+## Definition of done (every change)
 
-`npm run typecheck`, `npm run lint` (zero warnings), `npm test`, `npm run format:check` green; shared types for shared concepts; unit tests for new logic; keyboard + SR labels on new UI; check both themes at 320 px and 1920 px; no README change (T041 owns it).
+`npm run typecheck`, `npm run lint` (zero warnings), `npm test`, `npm run format:check` green; shared types for shared concepts; unit tests for new logic; keyboard + SR labels on new UI; check both themes at 320 px and 1920 px. `README.md`, `docs/`, and `tasks/` are fair game — update them when behavior, commands, or conventions change.
