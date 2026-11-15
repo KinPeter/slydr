@@ -11,6 +11,22 @@
     <title>Slydr</title>
 
     <!--
+      App icons live in client/public, which Vite copies verbatim into
+      client/dist, so every URL below is the same in development (Vite serves
+      public/ at the origin root) and in production (Express serves client/dist
+      from the same origin). Same-origin images are allowed by the §3.4 CSP
+      (`default-src 'self'; img-src 'self' blob: data:`), so no attribute here
+      needs a hash, nonce or exception. Do not point these at another origin.
+      There is deliberately no manifest link: Slydr is loopback-only and is not
+      an installable PWA, so `client/public/site.webmanifest` is never linked
+      from this document.
+    -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!--
       Anti-FOUC theme initialiser (spec §6.3).
       Parser-blocking classic script, so data-theme is set BEFORE first paint.
       It is a separate same-origin file, not an inline script, because the

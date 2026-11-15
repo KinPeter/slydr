@@ -43,7 +43,36 @@ describe('production static hosting', () => {
       (await request(app).get('/assets/index-Dk3fA9xZ.js')).headers['cache-control'],
     ).toContain('immutable');
     expect((await request(app).get('/theme-init.js')).headers['cache-control']).toBe('no-cache');
+    // This fixture ships no favicon asset, so the 204 fallback still applies.
     expect((await request(app).get('/favicon.ico')).status).toBe(204);
+  });
+
+  it('serves a favicon shipped in the client build instead of the 204 fallback', async () => {
+    const faviconDir = await fs.mkdtemp(path.join(os.tmpdir(), 'slydr-dist-favicon-'));
+    try {
+      await Promise.all([
+        fs.writeFile(path.join(faviconDir, 'index.html'), '<!doctype html><div id="root"></div>'),
+        fs.writeFile(path.join(faviconDir, 'favicon.ico'), 'ico'),
+        fs.writeFile(path.join(faviconDir, 'favicon-32x32.png'), 'png'),
+        fs.writeFile(path.join(faviconDir, 'site.webmanifest'), '{}'),
+      ]);
+      const faviconApp = createApp(makeTestConfig({ clientDir: faviconDir }));
+
+      const ico = await request(faviconApp).get('/favicon.ico');
+      expect(ico.status).toBe(200);
+      expect(ico.headers['content-type']).toContain('image/vnd.microsoft.icon');
+      expect(ico.headers['cache-control']).toBe('no-cache');
+
+      const png = await request(faviconApp).get('/favicon-32x32.png');
+      expect(png.status).toBe(200);
+      expect(png.headers['content-type']).toContain('image/png');
+
+      const manifest = await request(faviconApp).get('/site.webmanifest');
+      expect(manifest.status).toBe(200);
+      expect(manifest.headers['content-type']).toContain('manifest+json');
+    } finally {
+      await fs.rm(faviconDir, { recursive: true, force: true });
+    }
   });
 
   it('does not expose directories, dotfiles, traversal, or an SPA fallback', async () => {

@@ -17,6 +17,12 @@ describe.skipIf(!fs.existsSync(indexPath))('built client contract', () => {
     expect(fs.existsSync(path.join(dist, 'theme-init.js'))).toBe(true);
   });
 
+  it('copies the app icon assets from client/public into the build', () => {
+    for (const name of ['favicon.ico', 'favicon-32x32.png', 'site.webmanifest']) {
+      expect(fs.existsSync(path.join(dist, name))).toBe(true);
+    }
+  });
+
   it('has no external origins in built CSS', () => {
     for (const name of fs.readdirSync(path.join(dist, 'assets'))) {
       if (!name.endsWith('.css')) continue;

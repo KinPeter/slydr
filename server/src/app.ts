@@ -72,7 +72,6 @@ export function createApp(_config: ServerConfig, logger?: Logger, deps: AppDeps 
   app.use('/api', apiNotFoundHandler);
 
   if (_config.clientDir) {
-    app.get('/favicon.ico', (_req, res) => res.status(204).end());
     const clientDir = _config.clientDir;
     app.use(
       express.static(clientDir, {
@@ -95,6 +94,11 @@ export function createApp(_config: ServerConfig, logger?: Logger, deps: AppDeps 
         },
       }),
     );
+    // Fallback for a client build that ships no favicon.ico: answer 204 rather
+    // than 404 so browsers do not log a missing-icon request. When
+    // client/public/favicon.ico is present, express.static above has already
+    // served it and this handler never runs.
+    app.get('/favicon.ico', (_req, res) => res.status(204).end());
     app.use((_req, res) => {
       res.status(404).type('text/plain').send('Not found');
     });
