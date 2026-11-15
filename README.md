@@ -42,8 +42,10 @@ npm start
 browser. If no browser opens, copy the address into one. Press `Ctrl+C` in the terminal to
 stop Slydr.
 
-To run Slydr automatically in the background on Linux, see [Run Slydr in the background on
-Linux](RUNNING-IN-BACKGROUND-LINUX.md).
+To run Slydr automatically in the background, see the platform guide for your system:
+
+- [Run Slydr in the background on Linux](RUNNING-IN-BACKGROUND-LINUX.md)
+- [Run Slydr in the background on macOS](RUNNING-IN-BACKGROUND-MACOS.md)
 
 - Run `npm run build` again after pulling new changes; `npm start` serves the last build.
 - If port 4317 is already in use, Slydr tries the next nine ports and prints the one it
